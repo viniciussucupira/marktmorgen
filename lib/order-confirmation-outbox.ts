@@ -3,6 +3,7 @@
  * This module shares the existing bounded pool/Lua, never a provider quota.
  */
 import { createHash, randomBytes } from "node:crypto";
+import { openCourseOriginBinding, type OpenedCourseOriginBinding } from "@/lib/course-origin-binding";
 import { performance } from "node:perf_hooks";
 import { onAccount } from "@/lib/stripe-account";
 import { bindOrderConfirmationPreintent, commitOrderConfirmationSettlement } from "@/lib/orders";
@@ -27,7 +28,7 @@ const SESSION = /^cs_(?:test|live)_[A-Za-z0-9]{10,200}$/;
 export const CONFIRMATION_ORIGIN_DUE = "nl:order-confirmation:due";
 export const CONFIRMATION_CREATE_REPLAY_MS = 23 * 3_600_000;
 export const CONFIRMATION_CREATE_LEASE_MS = 120_000;
-export type ConfirmationPhase = "awaiting_creation" | "creating" | "creation_unknown" | "awaiting_payment" | "queued" | "dispatching" | "refused" | "accepted";
+export type ConfirmationPhase = "course_reserved" | "awaiting_creation" | "creating" | "creation_unknown" | "awaiting_payment" | "queued" | "dispatching" | "refused" | "accepted";
 export type ConfirmationOriginPayload = {
   body: string; preintentToken: string; intentFingerprint: string;
   /** Only the explicitly selected original product/store fields, never a
@@ -36,9 +37,13 @@ export type ConfirmationOriginPayload = {
   settlementToken?: string;
   message?: { from: string; to: string; subject: string; text: string; replyTo: string };
   paidCents?: number;
+  courseBindingToken?: string;
 };
 export type ConfirmationOrigin = {
-  kind: "confirmation"; id: string; statsId: string; nonce: string; accountId: string;
+  kind: "confirmation";
+  /** Extra immutable course variant. Legacy physical rows omit both fields. */
+  originKind?: "course"; courseBindingFingerprint?: string;
+  id: string; statsId: string; nonce: string; accountId: string;
   bodyDigest: string; intentFingerprint: string; bindingFingerprint: string; session: string; person: string;
   sourceValue: string; sealed: string; fingerprint: string; bytes: number;
   created: number; authorizedAt: number; next: number; expiresAt: number;
@@ -113,6 +118,8 @@ function parse(raw: unknown): ConfirmationOrigin | null {
     if (typeof raw !== "string" || Buffer.byteLength(raw) > SHIPMENT_MAIL_MAX_ROW_BYTES) return null;
     const row = data(JSON.parse(raw));
     const fields = ["kind", "id", "statsId", "nonce", "accountId", "bodyDigest", "intentFingerprint", "bindingFingerprint", "session", "person", "sourceValue", "sealed", "fingerprint", "bytes", "created", "authorizedAt", "next", "expiresAt", "state", "phase", "owner", "leaseUntil", "checks", "createAttempts", "reviewId", "recoveryCursor", "recoveryUpper", "erasedPeople", "erasureSaturated"];
+    const course = row?.originKind === "course";
+    if (course) fields.push("originKind", "courseBindingFingerprint");
     if (!row || Object.keys(row).length !== fields.length || !fields.every(key => Object.hasOwn(row, key)) || row.kind !== "confirmation" || typeof row.id !== "string" || !HASH.test(row.id) ||
         typeof row.statsId !== "string" || !STORE.test(row.statsId) || typeof row.nonce !== "string" || !HASH.test(row.nonce) ||
         row.id !== confirmationOriginId(row.statsId, row.nonce) || typeof row.accountId !== "string" || !ACCOUNT.test(row.accountId) ||
@@ -121,16 +128,20 @@ function parse(raw: unknown): ConfirmationOrigin | null {
         typeof row.bindingFingerprint !== "string" || (row.session === "" ? row.bindingFingerprint !== "" : !HASH.test(row.bindingFingerprint)) ||
         typeof row.sourceValue !== "string" || Buffer.byteLength(row.sourceValue) > 8_192 || typeof row.sealed !== "string" || !row.sealed.startsWith("s1.") ||
         !["queued", "preparing", "dispatching", "refused"].includes(String(row.state)) ||
-        !["awaiting_creation", "creating", "creation_unknown", "awaiting_payment", "queued", "dispatching", "refused", "accepted"].includes(String(row.phase)) ||
+        !["course_reserved", "awaiting_creation", "creating", "creation_unknown", "awaiting_payment", "queued", "dispatching", "refused", "accepted"].includes(String(row.phase)) ||
         typeof row.recoveryCursor !== "string" || row.recoveryCursor !== "" && !SESSION.test(row.recoveryCursor) ||
         typeof row.owner !== "string" || !/^[a-f0-9]{0,48}$/.test(row.owner) || typeof row.reviewId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(row.reviewId) ||
         ![row.bytes, row.created, row.authorizedAt, row.next, row.expiresAt, row.leaseUntil, row.checks, row.createAttempts, row.recoveryUpper].every(v => typeof v === "number" && Number.isSafeInteger(v) && v >= 0) ||
         Number(row.bytes) < Buffer.byteLength(raw) || typeof row.erasedPeople !== "string" || !/^(?:[a-f0-9]{64}){0,64}$/.test(row.erasedPeople) ||
         typeof row.erasureSaturated !== "boolean") return null;
+    if (course ? typeof row.courseBindingFingerprint !== "string" || !HASH.test(row.courseBindingFingerprint) ||
+        row.phase !== "course_reserved" || row.session !== "" || row.bindingFingerprint !== "" || row.state !== "queued" || row.owner !== "" || row.leaseUntil !== 0 || row.createAttempts !== 0 || row.checks !== 0
+        : row.phase === "course_reserved") return null;
     const source = data(JSON.parse(row.sourceValue));
-    if (!source || Object.keys(source).length !== (row.session ? 6 : 5) || source.kind !== "confirmation" || source.nonce !== row.nonce ||
+    if (!source || Object.keys(source).length !== (row.session ? 6 : 5) + (course ? 2 : 0) || source.kind !== "confirmation" || source.nonce !== row.nonce ||
         source.accountId !== row.accountId || source.bodyDigest !== row.bodyDigest || source.session !== row.session ||
         (row.session && source.bindingFingerprint !== row.bindingFingerprint)) return null;
+    if (course && (source.originKind !== "course" || source.courseBindingFingerprint !== row.courseBindingFingerprint)) return null;
     return row as unknown as ConfirmationOrigin;
   } catch { return null; }
 }
@@ -145,7 +156,7 @@ export function confirmationOutboxPolicy(runtime: ShipmentMailRuntime = {}, admi
   if (lifecycle !== "active") return null;
   return shipmentMailPolicy(runtime.policy === undefined ? CURRENT_SHIPMENT_MAIL_POLICY : runtime.policy, (runtime.now ?? Date.now)(), admission);
 }
-export async function readConfirmationOrigin(id: string, runtime: ShipmentMailRuntime = {}): Promise<{ row: ConfirmationOrigin; raw: string; payload: ConfirmationOriginPayload } | null> {
+async function readOrigin(id: string, runtime: ShipmentMailRuntime = {}): Promise<{ row: ConfirmationOrigin; raw: string; payload: ConfirmationOriginPayload } | null> {
   if ((runtime.lifecycle ?? CURRENT_SHIPMENT_MAIL_LIFECYCLE) === "never_activated" || !HASH.test(id)) return null;
   const pipeline = runtime.pipeline ?? redisPipeline;
   try {
@@ -163,14 +174,66 @@ export async function readConfirmationOrigin(id: string, runtime: ShipmentMailRu
   } catch { return null; }
 }
 
+/** Physical stages never consume an unimplemented course source. */
+export async function readConfirmationOrigin(id: string, runtime: ShipmentMailRuntime = {}) {
+  const found = await readOrigin(id, runtime);
+  return found && found.row.originKind === undefined ? found : null;
+}
+
+type PersistedCourseBinding = OpenedCourseOriginBinding & { token: string; fingerprint: string };
+/** Read the original selected snapshot at its recorded reservation time. A
+ * later expired preintent cannot delete pending evidence or renew its rights.
+ * This is not a current payment, checkout, access or provider capability. */
+export async function readCourseConfirmationOrigin(id: string, runtime: ShipmentMailRuntime = {}): Promise<{
+  row: ConfirmationOrigin; raw: string; payload: ConfirmationOriginPayload; binding: PersistedCourseBinding;
+} | null> {
+  const found = await readOrigin(id, runtime);
+  if (!found || found.row.originKind !== "course" || typeof found.payload.courseBindingToken !== "string") return null;
+  const token = found.payload.courseBindingToken, binding = openCourseOriginBinding(token, found.row.nonce, found.row.created);
+  if (!binding || hash(token) !== found.row.courseBindingFingerprint || binding.body !== found.payload.body ||
+      binding.preintent.token !== found.payload.preintentToken || binding.preintent.intentFingerprint !== found.row.intentFingerprint ||
+      binding.candidate.identity.statsId !== found.row.statsId || binding.candidate.identity.accountId !== found.row.accountId ||
+      binding.expiresAtMs !== found.row.expiresAt) return null;
+  return { ...found, binding: Object.freeze({ ...binding, token, fingerprint: hash(token) }) };
+}
+
+/** No caller is connected to this construction. The future trusted producer
+ * must first obtain Store/product from actual server reads; a signed selected
+ * snapshot is not proof of database ownership, buyer, funding or payment. */
+export async function reserveCourseConfirmationOrigin(input: {
+  bindingToken: string; nonce: string; snapshot: Record<string, unknown>;
+}, runtime: ShipmentMailRuntime = {}): Promise<{ ok: true; id: string; admitted: false; permitsCheckout: false; grantsAccess: false } | { ok: false }> {
+  const policy = confirmationOutboxPolicy(runtime);
+  if (!policy?.coveredOrigins?.includes("course-confirmation")) return { ok: false };
+  try {
+    const value = data(input);
+    if (!value || Object.keys(value).length !== 3 || !["bindingToken", "nonce", "snapshot"].every(k => Object.hasOwn(value, k))) return { ok: false };
+    const binding = openCourseOriginBinding(value.bindingToken, value.nonce, (runtime.now ?? Date.now)());
+    if (!binding || typeof value.bindingToken !== "string") return { ok: false };
+    const snapshot = snapshotData(value.snapshot) as Record<string, unknown>, store = data(snapshot.store), product = data(snapshot.product), course = data(product?.course);
+    const { identity, original } = binding.candidate;
+    if (!store || !product || !course || store.sid !== identity.sid || store.statsId !== identity.statsId || store.stripeAccountId !== identity.accountId ||
+        store.handle !== original.handle || store.email !== original.ownerEmail || store.currency !== original.currency || store.language !== original.language ||
+        product.id !== identity.productId || course.id !== identity.courseId || product.title !== original.title || product.priceCents !== original.priceCents) return { ok: false };
+    const result = await reserveOrigin({ statsId: identity.statsId, nonce: binding.nonce, accountId: identity.accountId,
+      body: binding.body, preintent: binding.preintent, snapshot }, runtime, { token: value.bindingToken, fingerprint: hash(value.bindingToken) });
+    if (!result.ok) return result;
+    // The persisted winner, not an enqueue-looking reply, is the evidence.
+    const saved = await readCourseConfirmationOrigin(result.id, runtime);
+    if (!saved || saved.binding.token !== value.bindingToken || saved.binding.body !== binding.body ||
+        saved.binding.preintent.token !== binding.preintent.token) return { ok: false };
+    return { ...result, admitted: false, permitsCheckout: false, grantsAccess: false };
+  } catch { return { ok: false }; }
+}
+
 /** The full future row envelope is charged before reserving a new payment
  * origin. The reviewed cap must fund its complete uncertain/pending lifetime.
  */
-export async function reserveConfirmationOrigin(input: {
+async function reserveOrigin(input: {
   statsId: string | null; nonce: string; accountId: string; body: string;
   preintent: { token: string; expiresAtMs: number; intentFingerprint: string };
   snapshot: Record<string, unknown>;
-}, runtime: ShipmentMailRuntime = {}): Promise<{ ok: true; id: string } | { ok: false }> {
+}, runtime: ShipmentMailRuntime = {}, course?: { token: string; fingerprint: string }): Promise<{ ok: true; id: string } | { ok: false }> {
   const p = confirmationOutboxPolicy(runtime);
   if (!p || !canSeal()) return { ok: false };
   try {
@@ -195,16 +258,18 @@ export async function reserveConfirmationOrigin(input: {
     const pipeline = runtime.pipeline ?? redisPipeline;
     const now = await serverNow(pipeline), id = confirmationOriginId(statsId, input.nonce);
     if (now === null || Math.abs(now - (runtime.now ?? Date.now)()) > 60_000 || input.preintent.expiresAtMs <= now) return { ok: false };
-    const payload: ConfirmationOriginPayload = { body: input.body, preintentToken: input.preintent.token, intentFingerprint: input.preintent.intentFingerprint, snapshot };
+    if (course && !openCourseOriginBinding(course.token, input.nonce, now)) return { ok: false };
+    const payload: ConfirmationOriginPayload = { body: input.body, preintentToken: input.preintent.token, intentFingerprint: input.preintent.intentFingerprint, snapshot,
+      ...(course ? { courseBindingToken: course.token } : {}) };
     const plain = JSON.stringify(payload);
     if (Buffer.byteLength(plain) > p.maxPayloadBytes) return { ok: false };
-    const row: ConfirmationOrigin = { kind: "confirmation", id, statsId, nonce: input.nonce,
+    const row: ConfirmationOrigin = { kind: "confirmation", ...(course ? { originKind: "course" as const, courseBindingFingerprint: course.fingerprint } : {}), id, statsId, nonce: input.nonce,
       accountId: input.accountId, bodyDigest, intentFingerprint: input.preintent.intentFingerprint, bindingFingerprint: "",
       session: "", person: hash(`unbound:${input.nonce}`),
-      sourceValue: JSON.stringify({ kind: "confirmation", nonce: input.nonce, accountId: input.accountId, bodyDigest, session: "" }),
+      sourceValue: JSON.stringify({ kind: "confirmation", nonce: input.nonce, accountId: input.accountId, bodyDigest, session: "", ...(course ? { originKind: "course", courseBindingFingerprint: course.fingerprint } : {}) }),
       sealed: seal(plain, context(id)), fingerprint: hash(plain), bytes: 0,
       created: now, authorizedAt: now, next: now, expiresAt: input.preintent.expiresAtMs,
-      state: "queued", phase: "awaiting_creation", owner: "", leaseUntil: 0, checks: 0, createAttempts: 0, reviewId: p.reviewId, recoveryCursor: "", recoveryUpper: 0, erasedPeople: "", erasureSaturated: false };
+      state: "queued", phase: course ? "course_reserved" : "awaiting_creation", owner: "", leaseUntil: 0, checks: 0, createAttempts: 0, reviewId: p.reviewId, recoveryCursor: "", recoveryUpper: 0, erasedPeople: "", erasureSaturated: false };
     row.bytes = SHIPMENT_MAIL_MAX_ROW_BYTES + keys(row).reduce((n, key) => n + Buffer.byteLength(key), 0) * 2 + 16_384;
     const raw = JSON.stringify(row);
     if (!parse(raw)) return { ok: false };
@@ -212,9 +277,18 @@ export async function reserveConfirmationOrigin(input: {
     const receipt = reply?.length === 1 ? array(reply[0]) : null;
     const saved = receipt && (receipt[0] === "queued" && receipt.length === 2 || receipt[0] === "existing" && receipt.length === 3) ? parse(receipt[1]) : null;
     if (receipt?.[0] === "existing" && receipt[2] !== saved?.sourceValue) return { ok: false };
-    if (!saved || saved.id !== id || saved.intentFingerprint !== row.intentFingerprint || saved.bodyDigest !== row.bodyDigest) return { ok: false };
+    if (!saved || saved.id !== id || saved.intentFingerprint !== row.intentFingerprint || saved.bodyDigest !== row.bodyDigest ||
+        saved.originKind !== row.originKind || saved.courseBindingFingerprint !== row.courseBindingFingerprint) return { ok: false };
     return { ok: true, id };
   } catch { return { ok: false }; }
+}
+
+/** Preserve the existing physical producer contract. Course bodies cannot
+ * downgrade to a physical source and bypass explicit course funding/isolation. */
+export async function reserveConfirmationOrigin(input: Parameters<typeof reserveOrigin>[0], runtime: ShipmentMailRuntime = {}): Promise<{ ok: true; id: string } | { ok: false }> {
+  const value = data(input);
+  if (!value || typeof value.body !== "string" || new URLSearchParams(value.body).get("metadata[mm_order_origin]") === "course-v1") return { ok: false };
+  return reserveOrigin(value as Parameters<typeof reserveOrigin>[0], runtime);
 }
 
 /** A preparation lease may authorize replay of the SAME Stripe creation
@@ -235,6 +309,8 @@ local raw=redis.call('GETRANGE',KEYS[1],0,131072)
 if raw~=expected or #raw>131072 then return {'changed'} end
 local ok,r=pcall(cjson.decode,raw)
 if not ok or type(r)~='table' or r.kind~='confirmation' or redis.call('GET',KEYS[2])~=r.sourceValue or type(r.expiresAt)~='number' or now>=r.expiresAt then return {'unknown'} end
+-- Reserve-only courses cannot acquire creation, cursor, bind or URL permission.
+if r.originKind~=nil then return {'unknown'} end
 if redis.call('EXISTS',KEYS[9],KEYS[10])~=0 then return {'held'} end
 local good,p=pcall(cjson.decode,ARGV[6])
 if not good or type(p)~='table' then return {'unknown'} end
@@ -258,7 +334,7 @@ elseif op=='create' then
 elseif op=='bind' then
  local good,n=pcall(cjson.decode,supplied)
  if not good or type(n)~='table' or n.kind~='confirmation' then return {'unknown'} end
- for _,field in ipairs({'id','statsId','nonce','accountId','bodyDigest','intentFingerprint','created','expiresAt','bytes','person','reviewId','erasedPeople','erasureSaturated'}) do if n[field]~=r[field] then return {'unknown'} end end
+ for _,field in ipairs({'originKind','courseBindingFingerprint','id','statsId','nonce','accountId','bodyDigest','intentFingerprint','created','expiresAt','bytes','person','reviewId','erasedPeople','erasureSaturated'}) do if n[field]~=r[field] then return {'unknown'} end end
  if r.session~='' then return {'bound',raw} end
  if n.session=='' or n.phase~='awaiting_payment' or #supplied>131072 or #supplied>r.bytes then return {'unknown'} end
  redis.call('SET',KEYS[1],supplied); redis.call('SET',KEYS[2],n.sourceValue)
@@ -501,13 +577,14 @@ if raw~=expected or #raw>131072 then return {'changed'} end
 local ok,r=pcall(cjson.decode,raw)
 local good,p=pcall(cjson.decode,ARGV[6])
 if not ok or not good or type(r)~='table' or type(p)~='table' or r.kind~='confirmation' or redis.call('GET',KEYS[2])~=r.sourceValue then return {'unknown'} end
+if r.originKind~=nil then return {'unknown'} end
 local supported=r.reviewId==p.reviewId
 if type(p.continuedReviewIds)=='table' then for _,id in ipairs(p.continuedReviewIds) do if id==r.reviewId then supported=true end end end
 if not supported or redis.call('EXISTS',KEYS[9],KEYS[10],KEYS[12])~=0 then return {'held'} end
 if op=='paid' then
  local good,n=pcall(cjson.decode,supplied)
  if not good or type(n)~='table' or r.session=='' or r.phase~='awaiting_payment' or r.state~='preparing' or r.owner~=ARGV[5] or r.leaseUntil<now then return {'held'} end
- for _,field in ipairs({'kind','id','statsId','nonce','accountId','bodyDigest','intentFingerprint','bindingFingerprint','session','sourceValue','bytes','created','authorizedAt','expiresAt','owner','leaseUntil','checks','createAttempts','reviewId','recoveryCursor','recoveryUpper','erasedPeople','erasureSaturated'}) do if n[field]~=r[field] then return {'unknown'} end end
+ for _,field in ipairs({'originKind','courseBindingFingerprint','kind','id','statsId','nonce','accountId','bodyDigest','intentFingerprint','bindingFingerprint','session','sourceValue','bytes','created','authorizedAt','expiresAt','owner','leaseUntil','checks','createAttempts','reviewId','recoveryCursor','recoveryUpper','erasedPeople','erasureSaturated'}) do if n[field]~=r[field] then return {'unknown'} end end
  if type(r.erasedPeople)~='string' or #r.erasedPeople>4096 or #r.erasedPeople%64~=0 or type(r.erasureSaturated)~='boolean' then return {'held'} end
  for i=1,#r.erasedPeople,64 do if string.sub(r.erasedPeople,i,i+63)==n.person then return {'erased'} end end
  if r.erasureSaturated then return {'held'} end
@@ -726,7 +803,7 @@ local ok,r=pcall(cjson.decode,raw)
 if #raw>131072 or not ok or type(r)~='table' or r.kind~='confirmation' or r.statsId~=store or redis.call('GET',KEYS[2])~=r.sourceValue then return {'unknown'} end
 if r.person==person then return {'matched'} end
 -- A resolved different buyer needs no retained hash for this request.
-if r.phase~='awaiting_creation' and r.phase~='creating' and r.phase~='creation_unknown' and r.phase~='awaiting_payment' then return {'other'} end
+if r.phase~='course_reserved' and r.phase~='awaiting_creation' and r.phase~='creating' and r.phase~='creation_unknown' and r.phase~='awaiting_payment' then return {'other'} end
 if type(r.erasedPeople)~='string' or #r.erasedPeople>4096 or #r.erasedPeople%64~=0 or string.find(r.erasedPeople,'[^a-f0-9]') or type(r.erasureSaturated)~='boolean' then return {'unknown'} end
 for i=1,#r.erasedPeople,64 do if string.sub(r.erasedPeople,i,i+63)==person then return {'marked'} end end
 if #r.erasedPeople==4096 then r.erasureSaturated=true else r.erasedPeople=r.erasedPeople..person end
@@ -764,7 +841,7 @@ export async function forgetOrderConfirmationMail(statsId: string | null | undef
     }
     // Re-read after the atomic mark: a competing bind cannot substitute the
     // recipient, and a concurrent removal needs no second release of capacity.
-    const found = await readConfirmationOrigin(String(id), runtime);
+    const found = await readOrigin(String(id), runtime);
     if (!found || found.row.statsId !== statsId || person !== null && found.row.person !== person ||
         (await confirmationMutation("cancel", found, null, runtime))?.[0] !== "canceled") throw Error("Confirmation erasure is unknown");
     deleted++;

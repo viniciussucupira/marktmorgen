@@ -28,6 +28,9 @@ export type ShipmentMailPolicy = {
   retryMilliseconds: number;
   admissionsUntil: number;
   continuedReviewIds?: string[];
+  /** Explicit extra source coverage in this same funded envelope; absence
+   * preserves legacy physical/shipment coverage, never admits courses. */
+  coveredOrigins?: ("course-confirmation")[];
 };
 /** No verified perpetual pending-storage envelope is supplied by this change. */
 export const CURRENT_SHIPMENT_MAIL_POLICY: ShipmentMailPolicy | null = null;
@@ -72,7 +75,7 @@ function data(value: unknown): Record<string, unknown> | null {
 export function shipmentMailPolicy(value: unknown, now = Date.now(), admission = true): ShipmentMailPolicy | null {
   try {
   const p = data(value);
-  const allowed = ["reviewId", "evidence", "ongoingStorageFunded", "emptyInitializationVerified", "globalItems", "globalBytes", "storeItems", "storeBytes", "maxPayloadBytes", "maximumChecks", "retryMilliseconds", "admissionsUntil", "continuedReviewIds"];
+  const allowed = ["reviewId", "evidence", "ongoingStorageFunded", "emptyInitializationVerified", "globalItems", "globalBytes", "storeItems", "storeBytes", "maxPayloadBytes", "maximumChecks", "retryMilliseconds", "admissionsUntil", "continuedReviewIds", "coveredOrigins"];
   if (p && Object.keys(p).some(key => !allowed.includes(key))) return null;
   if (!p || !integer(now) || typeof p.reviewId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(p.reviewId) ||
       typeof p.evidence !== "string" || !p.evidence.trim() || p.ongoingStorageFunded !== true || p.emptyInitializationVerified !== true) return null;
@@ -95,6 +98,14 @@ export function shipmentMailPolicy(value: unknown, now = Date.now(), admission =
       ids.push(field.value);
     }
     p.continuedReviewIds = ids;
+  }
+  if (p.coveredOrigins !== undefined) {
+    const input = p.coveredOrigins;
+    if (!Array.isArray(input) || Object.getPrototypeOf(input) !== Array.prototype ||
+        Object.getOwnPropertyDescriptor(input, "length")?.value !== 1 || Reflect.ownKeys(input).length !== 2) return null;
+    const field = Object.getOwnPropertyDescriptor(input, "0");
+    if (!field || !Object.hasOwn(field, "value") || field.value !== "course-confirmation") return null;
+    p.coveredOrigins = ["course-confirmation"];
   }
   return p as unknown as ShipmentMailPolicy;
   } catch { return null; }
@@ -184,6 +195,12 @@ if op == 'enqueue' then
  local ok,n=pcall(cjson.decode,supplied)
  local good,p=pcall(cjson.decode,ARGV[6])
  if not ok or not good or type(n)~='table' or type(p)~='table' or #supplied>maxbytes or n.bytes < #supplied or n.bytes > p.storeBytes or n.bytes > p.globalBytes or type(n.authorizedAt)~='number' or n.authorizedAt>now or now-n.authorizedAt>300000 or now>p.admissionsUntil then return {'unknown'} end
+ -- Courses are a reserve/readback construction only. Funding must explicitly
+ -- cover this origin in the SAME policy; no physical funding inheritance.
+ if n.originKind~=nil then
+  if n.originKind~='course' or n.phase~='course_reserved' or type(n.courseBindingFingerprint)~='string' or #n.courseBindingFingerprint~=64 or string.find(n.courseBindingFingerprint,'[^a-f0-9]') or
+     type(p.coveredOrigins)~='table' or #p.coveredOrigins~=1 or p.coveredOrigins[1]~='course-confirmation' then return {'unknown'} end
+ end
  if redis.call('EXISTS',KEYS[9],KEYS[10])~=0 then return {'unknown'} end
  local a,b=pool(KEYS[6]),pool(KEYS[7])
  if a==false or b==false then return {'unknown'} end
@@ -204,6 +221,8 @@ end
 if not r then return {'missing'} end
 if raw ~= expected then return {'changed'} end
 if op == 'cancel' then drop(); return {'canceled'} end
+-- This construction has no claim, dispatch or acceptance protocol for courses.
+if r.originKind~=nil then return {'unknown'} end
 if source ~= r.sourceValue then return {'unknown'} end
 if redis.call('EXISTS',KEYS[9],KEYS[10])~=0 then return {'held',raw} end
 local good,p=pcall(cjson.decode,ARGV[6])

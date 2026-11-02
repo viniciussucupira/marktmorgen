@@ -334,6 +334,76 @@ def main():
         assert paid_change("paid", erasedkeys, json.dumps(dict(saturated, person="6"*64, phase="queued")))[0] == "held"
         print("PASS:atomic bounded origin snapshots, durable idempotent erasure, expired-fence suppression, other-buyer rights, stale-request CAS and80concurrent markers on official Redis")
 
+        # A reserve-only course shares the existing pool and privacy family;
+        # it has no creation, URL, paid, claim or delivery permission.
+        course_row, course_keys = fixture("course-reserve")
+        course_keys = [k.replace(prefix, prefix + "course:") for k in course_keys]
+        made.update(course_keys)
+        course_row.update(originKind="course", courseBindingFingerprint="f" * 64, phase="course_reserved")
+        course_row["sourceValue"] = json.dumps(dict(kind="confirmation", originKind="course", nonce=course_row["nonce"],
+            accountId=course_row["accountId"], bodyDigest=course_row["bodyDigest"], session="", courseBindingFingerprint="f" * 64))
+        def course_enqueue(row=course_row, p=policy, client=None):
+            return (client or db).command("EVAL", shared, 10, *course_keys, "enqueue", "", json.dumps(row), now, 131072, json.dumps(p), "")
+        assert course_enqueue() == ["unknown"]
+        assert db.command("EXISTS", *course_keys) == 0
+        course_policy = dict(policy, coveredOrigins=["course-confirmation"])
+        for bad in [dict(course_row, originKind="future"), dict(course_row, phase="awaiting_creation"),
+                    dict(course_row, courseBindingFingerprint="not-a-hash")]:
+            assert course_enqueue(bad, course_policy) == ["unknown"]
+        assert db.command("EXISTS", *course_keys) == 0
+        def course_race(_):
+            conn = LocalRedis()
+            try: return course_enqueue(p=course_policy, client=conn)
+            finally: conn.sock.close()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as workers:
+            replies = list(workers.map(course_race, range(32)))
+        assert sum(r[0] == "queued" for r in replies) == 1
+        assert sum(r[0] == "existing" for r in replies) == 31
+        assert db.command("HGET", course_keys[5], "items") == "1"
+        original_course_raw = db.command("GET", course_keys[0])
+        original_course_source = db.command("GET", course_keys[1])
+        assert db.command("TTL", course_keys[0]) == -1 and db.command("TTL", course_keys[1]) == -1
+        replacement = dict(course_row, courseBindingFingerprint="e" * 64)
+        existing = course_enqueue(replacement, course_policy)
+        assert existing == ["existing", original_course_raw, original_course_source]
+        for op in ["create", "cursor", "bind", "url"]:
+            assert change(op, course_row, course_keys, json.dumps(replacement), expected=original_course_raw) == ["unknown"]
+        for op in ["claim", "dispatch", "defer", "not-accepted", "refused", "accepted"]:
+            assert db.command("EVAL", shared, 10, *course_keys, op, original_course_raw, json.dumps(replacement), now,
+                131072, json.dumps(course_policy), "a" * 48) == ["unknown"]
+        course_paidkeys = course_keys + [prefix + "course:new-person", prefix + "course:new-fence"]
+        made.update(course_paidkeys)
+        assert db.command("EVAL", paid_script, 12, *course_paidkeys, "paid", original_course_raw, json.dumps(replacement), now,
+            "a" * 48, json.dumps(course_policy)) == ["unknown"]
+        assert db.command("GET", course_keys[0]) == original_course_raw
+        assert db.command("GET", course_keys[1]) == original_course_source
+        # Same pool: another physical intention cannot evade its item cap.
+        physical, physicalkeys = fixture("course-shared-physical")
+        physicalkeys = [k.replace(prefix, prefix + "course:") for k in physicalkeys]
+        made.update(physicalkeys)
+        narrow_policy = dict(course_policy, globalItems=1, storeItems=1)
+        assert db.command("EVAL", shared, 10, *physicalkeys, "enqueue", "", json.dumps(physical), now,
+            131072, json.dumps(narrow_policy), "") == ["full"]
+        # The existing erasure protocol must mark an unresolved course and
+        # cancel it without requiring an unsupported delivery-stage policy.
+        request, recipient = "d" * 48, "3" * 64
+        course_fence = prefix + "course:erased-request"
+        made.add(course_fence)
+        begun = db.command("EVAL", erasure_script, 2, course_keys[3], course_fence, "begin", request, recipient, "SYNTHETIC")
+        assert begun == ["begun", [course_row["id"]]]
+        assert db.command("EVAL", erasure_script, 3, course_keys[0], course_keys[1], course_fence,
+            "mark", request, recipient, "SYNTHETIC") == ["marked"]
+        marked_course = json.loads(db.command("GET", course_keys[0]))
+        assert marked_course["courseBindingFingerprint"] == course_row["courseBindingFingerprint"]
+        assert marked_course["erasedPeople"] == recipient
+        assert db.command("TTL", course_keys[0]) == -1
+        assert db.command("EVAL", shared, 10, *course_keys, "cancel", db.command("GET", course_keys[0]), "", now,
+            131072, "null", "") == ["canceled"]
+        assert db.command("GET", course_keys[0]) is None and db.command("GET", course_keys[1]) == original_course_source
+        assert db.command("TTL", course_keys[1]) > 399 * 86400
+        assert db.command("HGET", course_keys[5], "items") == "0"
+        print("PASS: course explicit coverage,32CAS rivals,immutable winner,unsupported stages closed,shared cap and original erasure/retention")
+
         print(json.dumps({"observed_commands_including_eval_and_redis_call": profiles, "supplier_invoice": False}))
         # Exercise production TypeScript plus the exact shared/paid/accounting
         # Lua together, under the same explicitly disposable loopback opt-in.
