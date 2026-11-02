@@ -1735,6 +1735,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "built from blocks",
     intro:
       "Any product's own page can be laid out by you: a headline with a picture or a video, your own pictures, what the buyer gets, what is inside, who it is for and who it is not for, how it works step by step, a comparison table, bonuses, numbers counted by your store, things said about it elsewhere with links to where, who made it, questions, your guarantee, a countdown to a real deadline, buttons and real buyers' reviews. Start from a template, from an AI draft (" + AI_PLANS_WORDS + ") or from nothing. For something free, the same page asks for an email.",
+    visual: "salesPage",
     badge: WORKING,
     accent: "from-pink-brand to-violet-brand",
     plan: "creator",
@@ -1833,6 +1834,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "your own words",
     intro:
       "Drafts for every part of a store — a product's description, a whole sales page, a course outline, an email — in your store's language, from what you typed and what your store already says, on " + AI_PLANS_WORDS + ". It never invents a review, a number, a result or a deadline, and nothing is saved, posted or sent until you press the button that does it.",
+    visual: "aiWriting",
     badge: WORKING,
     accent: "from-violet-brand to-pink-brand",
     plan: "pro",
