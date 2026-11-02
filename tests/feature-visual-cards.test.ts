@@ -4,7 +4,7 @@
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
  * the team and email platforms (unit 6), PDF stamping and ways to pay
  * (unit 7), phone notifications (unit 8), security (unit 9), the sales page
- * editor and its writing help (unit 10), the deals board (unit 11), a pitch in Outreach (unit 12), live events (unit 5; the reviews page has none, since a drawn review would
+ * editor and its writing help (unit 10), the deals board (unit 11), a pitch in Outreach (unit 12), a finished import and a ClickFunnels dry run (unit 13), live events (unit 5; the reviews page has none, since a drawn review would
  * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
@@ -17,7 +17,7 @@
 import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AI_LEFT_EXAMPLE, CRM_EXAMPLE, CRM_PIPELINES, OUTREACH_EXAMPLE, EXAMPLE_KEY, FeatureVisual, SALES_PAGE_EXAMPLE } from "@/components/feature-visuals";
+import { AI_LEFT_EXAMPLE, CRM_EXAMPLE, CRM_PIPELINES, DRY_RUN_EXAMPLE, IMPORT_EXAMPLE, OUTREACH_EXAMPLE, EXAMPLE_KEY, FeatureVisual, SALES_PAGE_EXAMPLE } from "@/components/feature-visuals";
 import { BLOCK_KINDS, MAX_BENEFITS, MAX_BLOCKS, MAX_CTA_LABEL, MAX_FAQ_ITEMS, MAX_FIT_ITEMS, MAX_HEADLINE, MAX_INSIDE_ITEMS } from "@/lib/sales-page";
 import { KIND_ICONS } from "@/lib/sales-page-icons";
 import { AI_MONTHLY, AI_PLANS_WORDS } from "@/lib/ai-rules";
@@ -26,6 +26,9 @@ import { PLAN_TITLES } from "@/lib/plan";
 import { MAX_PITCH_BODY, MAX_PITCH_SUBJECT, OUTREACH_COUNTRIES, draftLinks, pitchFooter, pitchText } from "@/lib/outreach-rules";
 import { SITE_URL } from "@/lib/site-url";
 import { HOUSE_HANDLE } from "@/lib/house-store";
+import { IMPORT_DATE, IMPORT_LEFT_WORDS, IMPORT_WORDS, OUTCOME_WORDS } from "@/lib/import-words";
+import { IMPORT_ALLOWANCES } from "@/lib/import-limits";
+import { IMPORT_LIMITS } from "@/lib/imports";
 import { MAX_BUNDLE_ITEMS, MIN_BUNDLE_ITEMS } from "@/lib/bundle-rules";
 import { DEFAULT_ATTEMPTS, DEFAULT_PASS_PERCENT } from "@/lib/quiz";
 import { DEFAULT_KEYS } from "@/lib/key-setup";
@@ -49,7 +52,7 @@ import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security" | "salesPage" | "aiWriting" | "crm" | "outreach") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security" | "salesPage" | "aiWriting" | "crm" | "outreach" | "importDone" | "dryRun") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const flatText = (html: string) => text(html).join(" ").replace(/\s+/g, " ");
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
@@ -332,6 +335,44 @@ function main(): void {
   is("the caption: part of one pitch, no domain of its own, the stop link shortened, and the business, postal address and words made up", ow.some((w) => /^Part of one pitch, a draft/.test(w) && /without its own domain/.test(w) && /stop link shortened/.test(w) && w.includes("The business, the postal address and the words are made up as an example.")), true);
   is("drawn, hidden, beside its caption", hidden(ot), true);
 
+  part("Moving to Marktmorgen");
+  is("the switching page shows its card", findPage("platform", "switching-to-marktmorgen")?.visual, "importDone");
+  const im = draw("importDone");
+  const iw = text(im);
+  const tool = read("components/import-tool.tsx");
+  const importPage = read("app/studio/import/page.tsx");
+  const ex = IMPORT_EXAMPLE;
+  const rowsIn = ex.counts.added + ex.counts.already + ex.counts.skipped + ex.counts.errors;
+  is("the tool and the picture read one list of words", [tool.includes('from "@/lib/import-words"'), /const (WORDS|OUTCOME_WORDS)\b/.test(tool), IMPORT_WORDS.contacts.added, OUTCOME_WORDS.products.added], [true, false, "added to your list", "made as drafts"]);
+  is("Your last imports, and the import as the page names it, from its own tab's title", [iw.includes("Your last imports"), importPage.includes("Your last imports"), iw.includes(`Your email list: ${ex.file}`), /kind: "contacts",\s*title: "Your email list"/.test(importPage)], [true, true, true, true]);
+  is("its day in UTC and its rows, in the page's own format, the rows the four counts add up to", [iw.includes(`${IMPORT_DATE.format(new Date(ex.at))} UTC · ${rowsIn.toLocaleString("en-US")} rows`), importPage.includes("const DATE = IMPORT_DATE;"), importPage.includes('{`${DATE.format(new Date(job.at))} UTC · ${job.total.toLocaleString("en-US")} rows`}')], [true, true, true]);
+  is("Finished, and the four counts in the tool's words for a list, in its order", [iw.includes("Finished"), tool.includes('? "Finished"'), [IMPORT_WORDS.contacts.added, IMPORT_WORDS.contacts.already, IMPORT_LEFT_WORDS.skipped, IMPORT_LEFT_WORDS.errors].map((w) => iw.indexOf(w)).every((at, k, all) => at >= 0 && (k === 0 || at > all[k - 1])), ["{IMPORT_LEFT_WORDS.skipped}</dt>", "{IMPORT_LEFT_WORDS.errors}</dt>"].every((w) => tool.includes(w))], [true, true, true, true]);
+  is("no tiles for contacts that cannot be emailed while there are none, as the tool hides them", [iw.includes("contacts you cannot email"), tool.includes('job.kind === "contacts" && (job.counts.contacts || job.counts.stopped)')], [false, true]);
+  is("the counts, two to a row, as a past import shows them", [importPage.includes("<ImportProgress job={view(job)} compact />"), tool.includes('grid grid-cols-2 gap-2 text-sm ${compact ? "" : "sm:grid-cols-4"}')], [true, true]);
+  is("the rows not brought in, linked when there are any", [iw.includes("Download the rows that were not brought in"), tool.includes("job.counts.errors + job.counts.skipped > 0 && !running(job.state)"), ex.counts.errors + ex.counts.skipped > 0], [true, true, true]);
+  is("the counts inside what a list import takes, and what the Store plan imports in a month", [rowsIn <= IMPORT_LIMITS.contacts, rowsIn <= IMPORT_ALLOWANCES.creator.rows, findPage("platform", "switching-to-marktmorgen")?.plan], [true, true, "creator"]);
+  is("the file, the day and the counts are said to be an example", iw.some((w) => /^One of your last imports/.test(w) && w.includes("The file, the day and the counts are made up as an example.")), true);
+  is("drawn, hidden, beside its caption", hidden(im), true);
+
+  part("Moving from ClickFunnels");
+  is("the ClickFunnels page shows its card", findPage("platform", "move-from-clickfunnels")?.visual, "dryRun");
+  const dr = draw("dryRun");
+  const dw = text(dr);
+  const dx = DRY_RUN_EXAMPLE;
+  const flatTool = tool.replace(/\s+/g, " ");
+  is("the heading and its sentence, word for word", [dw.includes("Dry run: what this file will do"), tool.includes("Dry run: what this file will do"), dw.includes("Every row was checked the way the import checks it, against your store as it is now. Nothing was saved. The import checks every row again when it runs."), flatTool.includes("Every row was checked the way the import checks it, against your store as it is now. Nothing was saved. The import checks every row again when it runs.")], [true, true, true, true]);
+  const shownWords = (Object.keys(OUTCOME_WORDS.products) as (keyof typeof OUTCOME_WORDS.products)[]).filter((o) => (dx.counts[o] ?? 0) > 0 || o === "added").map((o) => OUTCOME_WORDS.products[o]);
+  is("a tile for each outcome with rows, and always the first, in the tool's words for products", [shownWords, tool.includes('.filter((o) => dry.counts[o] > 0 || o === "added")'), dw.includes(OUTCOME_WORDS.products.error ?? "?")], [["made as drafts", "already in your store", "left out"], true, false]);
+  is("the rows worth a look, under the table's own headings", [["Rows worth a look", "Row", "Becomes", "Why", "Value"].every((w) => dw.includes(w)), tool.includes(': "Rows worth a look"'), ["Row", "Becomes", "Why", "Value"].every((w) => tool.includes(`font-semibold">${w}</th>`))], [true, true, true]);
+  const server = read("lib/imports.ts");
+  is("each row's note is the one the server writes", [dw.includes("A product with this title is already in your store: no copy is made"), server.includes('"A product with this title is already in your store: no copy is made"'), dw.includes("The same title as row 6"), server.includes('"The same title as row"') && server.includes("`${words} ${earlier}`")], [true, true, true, true]);
+  const fileRows = (dx.counts.added ?? 0) + (dx.counts.already ?? 0) + (dx.counts.skipped ?? 0) + (dx.counts.error ?? 0);
+  is("a repeated title points back to an earlier row that was made, and every row is inside the file (the header is row 1)", dx.rows.filter((r) => r.outcome === "skipped").map((r) => { const n = Number(/The same title as row (\d+)$/.exec(r.note)?.[1]); return n >= 2 && n < r.line && !dx.rows.some((x) => x.line === n); }).concat([dx.rows.every((r) => r.line >= 2 && r.line <= fileRows + 1)]), [true, true]);
+  is("the bar names the studio's own step", [dr.includes("Studio · Move from ClickFunnels"), importPage.includes("Move from ClickFunnels")], [true, true]);
+  is("and the link to every row", [dw.includes("Download the dry run, every row"), tool.includes("Download the dry run, every row")], [true, true]);
+  is("the products and counts are said to be an example, before anything is saved", dw.some((w) => /^Part of the dry run of a products file from ClickFunnels/.test(w) && /buttons to import it sit under it/.test(w) && w.includes("The products and the counts are made up as an example.")), true);
+  is("drawn, hidden, beside its caption", hidden(dr), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -350,6 +391,8 @@ function main(): void {
     ["ai writing", ai, new RegExp(`^(${AI_LEFT_EXAMPLE} left this month\\. .*|.*example.*)$`)],
     ["deals", cw, /^(People you are talking to .* 2 open, worth \$1,800; won so far, \$0\.|· 2 open|1 · \$(600|1,200)|\$(600|1,200)|.*example.*)$/],
     ["outreach", ow, /^(Address printed on their own website, read October 28, 2026: .*|123 Example Street, Portland, ME 04101, United States|.*example.*)$/],
+    ["import", iw, /^(Oct 30, 02:05\sPM UTC · 968 rows|912|41|12|3|.*example.*)$/],
+    ["dry run", dw, /^(12|1|4|9|The same title as row 6|.*example.*)$/],
     ["events", e, /^(2 coming up|\w+day, November (10|19)\b.* \(E[SD]T\) · (1 hour|45 minutes)|12 of 30 places taken|8 going|The way in shows \d+ minutes before the start, only to members who can come\.|.*example.*)$/],
   ] as const) {
     is(`${name}: every figure is the code's, or an example said as one`, words.filter((w) => /\d/.test(w) && !allowed.test(w)), []);
