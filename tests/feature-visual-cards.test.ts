@@ -4,7 +4,7 @@
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
  * the team and email platforms (unit 6), PDF stamping and ways to pay
  * (unit 7), phone notifications (unit 8), security (unit 9), the sales page
- * editor and its writing help (unit 10), the deals board (unit 11), live events (unit 5; the reviews page has none, since a drawn review would
+ * editor and its writing help (unit 10), the deals board (unit 11), a pitch in Outreach (unit 12), live events (unit 5; the reviews page has none, since a drawn review would
  * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
@@ -17,12 +17,15 @@
 import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AI_LEFT_EXAMPLE, CRM_EXAMPLE, CRM_PIPELINES, EXAMPLE_KEY, FeatureVisual, SALES_PAGE_EXAMPLE } from "@/components/feature-visuals";
+import { AI_LEFT_EXAMPLE, CRM_EXAMPLE, CRM_PIPELINES, OUTREACH_EXAMPLE, EXAMPLE_KEY, FeatureVisual, SALES_PAGE_EXAMPLE } from "@/components/feature-visuals";
 import { BLOCK_KINDS, MAX_BENEFITS, MAX_BLOCKS, MAX_CTA_LABEL, MAX_FAQ_ITEMS, MAX_FIT_ITEMS, MAX_HEADLINE, MAX_INSIDE_ITEMS } from "@/lib/sales-page";
 import { KIND_ICONS } from "@/lib/sales-page-icons";
 import { AI_MONTHLY, AI_PLANS_WORDS } from "@/lib/ai-rules";
 import { DEFAULT_STAGES, FIRST_PIPELINE_NAME, PIPELINES_BY_TIER, pipelineLimit } from "@/lib/crm-rules";
 import { PLAN_TITLES } from "@/lib/plan";
+import { MAX_PITCH_BODY, MAX_PITCH_SUBJECT, OUTREACH_COUNTRIES, draftLinks, pitchFooter, pitchText } from "@/lib/outreach-rules";
+import { SITE_URL } from "@/lib/site-url";
+import { HOUSE_HANDLE } from "@/lib/house-store";
 import { MAX_BUNDLE_ITEMS, MIN_BUNDLE_ITEMS } from "@/lib/bundle-rules";
 import { DEFAULT_ATTEMPTS, DEFAULT_PASS_PERCENT } from "@/lib/quiz";
 import { DEFAULT_KEYS } from "@/lib/key-setup";
@@ -46,7 +49,8 @@ import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security" | "salesPage" | "aiWriting" | "crm") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security" | "salesPage" | "aiWriting" | "crm" | "outreach") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const flatText = (html: string) => text(html).join(" ").replace(/\s+/g, " ");
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -304,6 +308,30 @@ function main(): void {
   is("three more stages do follow", DEFAULT_STAGES.length - 2, 3);
   is("drawn, hidden, beside its caption", hidden(cr), true);
 
+  part("Outreach");
+  is("the outreach page shows its card", findPage("platform", "outreach")?.visual, "outreach");
+  const ot = draw("outreach");
+  const ow = text(ot);
+  const studio = read("components/outreach-studio.tsx");
+  const o = OUTREACH_EXAMPLE;
+  const us = OUTREACH_COUNTRIES.find((c) => c.code === "US");
+  is("the business, its address and the Draft tag, as a pitch shows them", [ow.includes(o.company), ow.includes(o.to), ow.includes("Draft"), studio.includes('draft: "Draft"'), studio.includes("{STATUS_WORDS[pitch.status]}")], [true, true, true, true, true]);
+  is("where the address was printed and the day it was read, in the studio's own date", [ow.includes(`Address printed on their own website, read ${o.read}: ${o.page}`), studio.includes("{`Address printed on their own website, read ${day(pitch.foundAt)}: `}"), new Date("2026-10-28T12:00:00Z").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }), studio.includes('toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })')], [true, true, o.read, true]);
+  is("the draft's labels, word for word", ["Subject", "Your email. Read it and make it yours before you send it", "Added under it on every email, as the law asks"].every((w) => ow.includes(w) && studio.includes(w)), true);
+  const aiSource = read("lib/ai.ts");
+  is("the subject and words in the shape the writing help is asked for", [o.subject.length <= 60, aiSource.includes("The subject at most 60 characters"), o.body.split(/\s+/).length <= 110, aiSource.includes("at most 110 words, two or three short paragraphs separated by one blank line"), o.body.split("\n\n").length, o.body.endsWith("?"), aiSource.includes("End with one simple question that is easy to answer."), o.subject.length <= MAX_PITCH_SUBJECT && o.body.length <= MAX_PITCH_BODY], [true, true, true, true, 3, true, true, true]);
+  is("no count of followers or buyers in the words, which the writing help is told never to state", /\d/.test(o.body), false);
+  is("the sender is the demo store's own name, as readSender falls back to, and the store link its own", [o.sender.name, read("lib/outreach.ts").includes("name: store.mail?.fromName || store.name"), read("lib/demo-seed.ts").includes('name: "Harbor Kitchen"'), o.storeUrl], ["Harbor Kitchen", true, true, `${SITE_URL}/@${HOUSE_HANDLE}`]);
+  const footer = us ? pitchFooter({ sender: o.sender, storeUrl: o.storeUrl, page: o.page, country: us, stopUrl: o.stopUrl }) : "";
+  is("the lines under it are the code's own footer for the United States, with its business proposal line", [us?.saysCommercial, flatText(ot).includes(footer.replace(/\s+/g, " ")), footer.includes("This is a business proposal, sent once."), footer.includes(`I found this address on your website (${o.page}).`)], [true, true, true, true]);
+  is("the store link and the stop link in the code's own shapes", [o.storeUrl === `${SITE_URL}/@${HOUSE_HANDLE}`, read("lib/purchase-email.ts").includes("return `${SITE_URL}/@${store.handle}`;"), o.stopUrl.startsWith(`${SITE_URL}/outreach/stop/`), read("lib/outreach.ts").includes("export const stopUrl = (token: string) => `${SITE_URL}/outreach/stop/${token}`;")], [true, true, true, true]);
+  is("the three ways to open it and the line under them", [["Open it in Gmail", "Open it in my mail app", "Copy it"].every((w) => ow.includes(w) && studio.includes(w)), ow.includes("Each of these opens a draft in your own mailbox. Nothing is sent until you press Send there, and nothing is ever sent from here."), studio.replace(/\s+/g, " ").includes("Each of these opens a draft in your own mailbox. Nothing is sent until you press Send there, and nothing is ever sent from here.")], [true, true, true]);
+  is("I sent it and Delete this draft under it, as a draft's card ends", [["I sent it", "Delete this draft"].every((w) => ow.includes(w) && studio.includes(w))], [true]);
+  is("a short draft gets both mailbox links, as the studio offers them", draftLinks(o.to, o.subject, pitchText(o.body, footer)) !== null, true);
+  is("every address is on a reserved example domain", [o.to, o.page].every((w) => /\.example(\/|$)/.test(w)), true);
+  is("the caption: part of one pitch, no domain of its own, the stop link shortened, and the business, postal address and words made up", ow.some((w) => /^Part of one pitch, a draft/.test(w) && /without its own domain/.test(w) && /stop link shortened/.test(w) && w.includes("The business, the postal address and the words are made up as an example.")), true);
+  is("drawn, hidden, beside its caption", hidden(ot), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -321,6 +349,7 @@ function main(): void {
     ["sales pages", sg, new RegExp(`^(\\d\\. (${BLOCK_KINDS.map((k) => k.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})|${blocks.length} blocks live on its page\\.|What you get · 5 items|\\d items|3 for, 2 not for|Add a block \\(${blocks.length} of ${MAX_BLOCKS}\\)|.*example.*)$`)],
     ["ai writing", ai, new RegExp(`^(${AI_LEFT_EXAMPLE} left this month\\. .*|.*example.*)$`)],
     ["deals", cw, /^(People you are talking to .* 2 open, worth \$1,800; won so far, \$0\.|· 2 open|1 · \$(600|1,200)|\$(600|1,200)|.*example.*)$/],
+    ["outreach", ow, /^(Address printed on their own website, read October 28, 2026: .*|123 Example Street, Portland, ME 04101, United States|.*example.*)$/],
     ["events", e, /^(2 coming up|\w+day, November (10|19)\b.* \(E[SD]T\) · (1 hour|45 minutes)|12 of 30 places taken|8 going|The way in shows \d+ minutes before the start, only to members who can come\.|.*example.*)$/],
   ] as const) {
     is(`${name}: every figure is the code's, or an example said as one`, words.filter((w) => /\d/.test(w) && !allowed.test(w)), []);

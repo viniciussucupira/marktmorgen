@@ -2092,6 +2092,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "that could pay you",
     intro:
       "Name a brand that could sponsor you, a partner who could sell your product for a share, or a company that could buy it. Your store finds the address that business published for being written to, writes a short email from what you tell it, and opens it as a draft in your own mailbox. You read it and send it yourself. On " + AI_PLANS_WORDS + ".",
+    visual: "outreach",
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "pro",
