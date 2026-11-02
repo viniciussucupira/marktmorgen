@@ -20,6 +20,9 @@ import { BLOCK_KINDS, MAX_BLOCKS, type BlockKind } from "@/lib/sales-page";
 import { AI_PLANS_WORDS } from "@/lib/ai-rules";
 import { KIND_ICONS } from "@/lib/sales-page-icons";
 import { DEFAULT_STAGES, FIRST_PIPELINE_NAME, pipelineLimit, type Deal } from "@/lib/crm-rules";
+import { OUTREACH_COUNTRIES, pitchFooter } from "@/lib/outreach-rules";
+import { SITE_URL } from "@/lib/site-url";
+import { HOUSE_HANDLE } from "@/lib/house-store";
 
 /**
  * The pictures at the top of each feature page.
@@ -59,7 +62,8 @@ export type VisualKey =
   | "security"
   | "salesPage"
   | "aiWriting"
-  | "crm";
+  | "crm"
+  | "outreach";
 
 /*
  * The frame every one of these mockups sits in.
@@ -1196,6 +1200,72 @@ function CrmVisual() {
   );
 }
 
+/**
+ * Part of one pitch, a draft, from the list at the foot of the studio's
+ * Outreach page (components/outreach-studio.tsx), for the demo store
+ * (lib/house-store.ts), which has no domain of its own: the business and the
+ * address, the Draft tag, where the address was printed and the day it was
+ * read, the subject and the creator's words in the shape the writing help is
+ * asked for (lib/ai.ts, writePitch), the lines the code's own pitchFooter
+ * adds for the United States with the stop link shortened, the three ways to
+ * open it, the line that nothing is sent from here, and I sent it or Delete
+ * this draft. The sender is the store's own name, as readSender falls back to;
+ * the business, the postal address and the words are an example.
+ */
+export const OUTREACH_EXAMPLE = {
+  company: "Ashgrove Cookware",
+  to: "partnerships@ashgrovecookware.example",
+  page: "https://ashgrovecookware.example/contact",
+  read: "October 28, 2026",
+  subject: "A sponsored weeknight recipe with your skillet",
+  body: "I'm Jenny, and I write simple family meal plans at Harbor Kitchen.\n\nYour site says your pans are made for everyday home cooking. I would like to make one weeknight recipe video with your skillet, as a paid sponsorship.\n\nWould a short call next week work for you?",
+  sender: { name: "Harbor Kitchen", address: "123 Example Street, Portland, ME 04101, United States" },
+  storeUrl: `${SITE_URL}/@${HOUSE_HANDLE}`,
+  stopUrl: `${SITE_URL}/outreach/stop/…`,
+};
+
+function OutreachVisual() {
+  const o = OUTREACH_EXAMPLE;
+  const us = OUTREACH_COUNTRIES.find((c) => c.code === "US");
+  const footer = us ? pitchFooter({ sender: o.sender, storeUrl: o.storeUrl, page: o.page, country: us, stopUrl: o.stopUrl }) : "";
+  return (
+    <Window bar="Studio · Outreach">
+      <div className="space-y-3 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-[13px] font-bold text-ink">{o.company}</p>
+            <p className="break-all text-[12px] text-ink-soft">{o.to}</p>
+          </div>
+          <span className="tag">Draft</span>
+        </div>
+        <p className="break-all text-[11px] text-ink-soft">{`Address printed on their own website, read ${o.read}: ${o.page}`}</p>
+        <div>
+          <p className="field-label">Subject</p>
+          <p className="field mt-1 break-words text-[12px]">{o.subject}</p>
+        </div>
+        <div>
+          <p className="field-label">Your email. Read it and make it yours before you send it</p>
+          <p className="field mt-1 whitespace-pre-wrap break-words text-[12px]">{o.body}</p>
+        </div>
+        <div>
+          <p className="field-label">Added under it on every email, as the law asks</p>
+          <p className="mt-1 whitespace-pre-wrap break-words rounded-xl bg-sand p-2.5 text-[11px] text-ink-soft">{footer}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="btn btn-primary btn-sm pointer-events-none">Open it in Gmail</span>
+          <span className="btn btn-secondary btn-sm pointer-events-none">Open it in my mail app</span>
+          <span className="btn btn-secondary btn-sm pointer-events-none">Copy it</span>
+        </div>
+        <p className="text-[11px] text-ink-soft">Each of these opens a draft in your own mailbox. Nothing is sent until you press Send there, and nothing is ever sent from here.</p>
+        <div className="flex flex-wrap gap-2 border-t border-line pt-3">
+          <span className="btn btn-secondary btn-sm pointer-events-none">I sent it</span>
+          <span className="btn btn-ghost btn-sm pointer-events-none">Delete this draft</span>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -1226,6 +1296,7 @@ const CAPTIONS: Record<VisualKey, string> = {
   security: "Passkeys and two-step login in the studio's account card. The device, the dates and the recovery address are made up as an example.",
   salesPage: "Part of a product's sales page in the studio's editor; the page's score and its test sit at the break. The product and its blocks are made up as an example.",
   crm: `Part of the deals board in the studio, as the store's owner sees it on the ${PLAN_TITLES.creator} plan, on the pipeline a store starts with; its totals and filters sit at the break, and three more stages follow. The deals, the people and the amounts are made up as an example: values recorded on deals, not revenue.`,
+  outreach: "Part of one pitch, a draft, from the list at the foot of the studio's Outreach page, for a store without its own domain, with the lines the code adds under every email to a business in the United States and its stop link shortened. The business, the postal address and the words are made up as an example.",
   aiWriting: `The writing help in the sales page editor, on ${AI_PLANS_WORDS}. The product and the jobs left are made up as an example.`,
 };
 
@@ -1266,6 +1337,7 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     salesPage: <SalesPageVisual />,
     aiWriting: <AiWritingVisual />,
     crm: <CrmVisual />,
+    outreach: <OutreachVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
