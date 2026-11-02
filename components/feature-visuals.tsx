@@ -51,7 +51,8 @@ export type VisualKey =
   | "emailPlatforms"
   | "stamp"
   | "ways"
-  | "phone";
+  | "phone"
+  | "security";
 
 /*
  * The frame every one of these mockups sits in.
@@ -934,6 +935,47 @@ function PhoneVisual() {
   );
 }
 
+/**
+ * The studio's own sign-in protections (components/passkey-manager.tsx and
+ * components/two-step-manager.tsx, in the studio's account card): a passkey
+ * kept, and two-step login on with its buttons, in their own words; the
+ * recovery address masked as hideAddress (lib/recovery-address.ts) does. The count of recovery codes is the code's
+ * (RECOVERY_CODES in lib/two-step.ts, held by the test, not imported here:
+ * that module reaches Redis and email).
+ */
+function SecurityVisual() {
+  return (
+    <Window bar="Studio · Account">
+      <div className="space-y-3 p-5">
+        <div>
+          <p className="flex items-center gap-2 text-[13px] font-semibold text-ink">
+            <Icon name="key" size={15} className="text-violet-deep" />
+            Passkeys
+          </p>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-[var(--r-md)] px-3 py-2.5 ring-1 ring-line">
+            <span className="min-w-0">
+              <span className="block break-words text-[13px] font-semibold text-ink">iPhone</span>
+              <span className="block break-words text-[11.5px] text-ink-soft">Added Oct 12, 2026 · last used Oct 30, 2026 · synced across your devices</span>
+            </span>
+            <span className="text-[12px] font-bold text-ink-soft underline underline-offset-4">Remove</span>
+          </div>
+        </div>
+        <div className="border-t border-line pt-3">
+          <p className="flex items-center gap-2 text-[13px] font-semibold text-ink">
+            <Icon name="lock" size={15} className="text-violet-deep" />
+            Two-step login
+          </p>
+          <p className="mt-1.5 break-words text-[12px] text-ink-soft">On. Logging in with the emailed link also asks for the code in your authenticator app; a passkey needs no code. 10 recovery codes left. Lose your phone and your codes, and a link to your recovery address, m•••@e•••.com, lets you back in.</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <span className="btn btn-secondary btn-sm pointer-events-none">New recovery codes</span>
+            <span className="btn btn-secondary btn-sm pointer-events-none">Turn it off</span>
+          </div>
+        </div>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -961,6 +1003,7 @@ const CAPTIONS: Record<VisualKey, string> = {
   stamp: "A page of a stamped PDF, with the line every page carries, and the product's switch in the studio. The workbook, the buyer and the order are made up as an example.",
   ways: "Ways to pay in the studio. Which ways show depends on what is switched on in each creator's own Stripe account; these are an example.",
   phone: "Phone notifications in the studio, as a Support team member sees them: each person is offered only what their role may hear. The choices checked are an example.",
+  security: "Passkeys and two-step login in the studio's account card. The device, the dates and the recovery address are made up as an example.",
 };
 
 /**
@@ -996,6 +1039,7 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     stamp: <StampVisual />,
     ways: <WaysVisual />,
     phone: <PhoneVisual />,
+    security: <SecurityVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (

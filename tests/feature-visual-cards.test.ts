@@ -3,7 +3,7 @@
  * bundles, quizzes and certificates, license keys, webhooks, calendar sync,
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
  * the team and email platforms (unit 6), PDF stamping and ways to pay
- * (unit 7), phone notifications (unit 8), live events (unit 5; the reviews page has none, since a drawn review would
+ * (unit 7), phone notifications (unit 8), security (unit 9), live events (unit 5; the reviews page has none, since a drawn review would
  * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
@@ -33,12 +33,14 @@ import { MAX_TEAM } from "@/lib/team";
 import { stampLine } from "@/lib/pdf-stamp-line";
 import { stampLine as printedLine } from "@/lib/pdf-stamp";
 import { waysFrom } from "@/lib/payment-methods";
+import { RECOVERY_CODES } from "@/lib/two-step";
+import { hideAddress } from "@/lib/recovery-address";
 import { eventTime, lengthWords } from "@/lib/community-events";
 import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -220,6 +222,18 @@ function main(): void {
   is("the four kinds a Support member may hear, and the caption says so", [can("support", "orders"), can("support", "community"), pn.some((x) => /as a Support team member sees them/.test(x))], [true, true, true]);
   is("drawn, hidden, beside its caption", hidden(ph), true);
 
+  part("Security");
+  is("the security page shows its card", findPage("platform", "security")?.visual, "security");
+  const sc = draw("security");
+  const sec = text(sc);
+  const passkeys = read("components/passkey-manager.tsx");
+  const twoStep = read("components/two-step-manager.tsx");
+  is("the passkeys heading, a row in its own format, and its Remove", [sec.includes("Passkeys"), sec.includes("Added Oct 12, 2026 · last used Oct 30, 2026 · synced across your devices"), passkeys.includes("`Added ${day(row.createdAt)} · last used ${day(row.lastUsedAt)}${row.synced ? \" · synced across your devices\" : \"\"}`"), passkeys.includes('month: "short", day: "numeric", year: "numeric"'), sec.includes("Remove")], [true, true, true, true, true]);
+  is("two-step login on, in its own sentence, with the codes a setup makes", [sec.includes("Two-step login"), sec.includes(`On. Logging in with the emailed link also asks for the code in your authenticator app; a passkey needs no code. ${RECOVERY_CODES} recovery codes left. Lose your phone and your codes, and a link to your recovery address, ${hideAddress("maya@example.com")}, lets you back in.`), twoStep.includes("`On. Logging in with the emailed link also asks for the code in your authenticator app; a passkey needs no code. ${left} recovery ${left === 1 ? \"code\" : \"codes\"} left."), RECOVERY_CODES], [true, true, true, 10]);
+  is("the whole sentence, its recovery address masked as the code masks it", [twoStep.includes("` Lose your phone and your codes, and a link to your recovery address, ${recoveryShown}, lets you back in.`"), hideAddress("maya@example.com")], [true, "m•••@e•••.com"]);
+  is("two-step login's own buttons when it is on", ["New recovery codes", "Turn it off"].every((w) => sec.includes(w) && twoStep.includes(w)), true);
+  is("drawn, hidden, beside its caption", hidden(sc), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -230,6 +244,7 @@ function main(): void {
     ["discord", d, /^(Up to \d+ roles for each product, on up to \d+ products\.|Gives \d roles?\.|.*example.*)$/],
     ["community", m, /^(48|112|31|.*example.*)$/],
     ["affiliates", a, /^(120|6|\$59\.40|\$30|\$29\.40|.*example.*)$/],
+    ["security", sec, /^(Added Oct 12, 2026 · last used Oct 30, 2026 · synced across your devices|On\. Logging in .* 10 recovery codes left\. Lose your phone .*lets you back in\.|.*example.*)$/],
     ["phone", pn, /^(A community live event starts in 15 minutes|.*example.*)$/],
     ["stamp", sp, /^(Week 1: the plan|Sold to maya@example\.com on Sep 26, 2026 · order …E54F2A · for personal use|.*example.*)$/],
     ["team", t, new RegExp(`^(2 of ${MAX_TEAM} places used|Joined Oct 3, 2026|Invited as ${ROLE_NAMES.support} · the link works until Nov 8|.*example.*)$`)],
