@@ -18,7 +18,7 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/mail/ses/route";
 import { claimHandle, ensureListId, ensureStatsId, setMailSettings, setSubscription, storeForEmail } from "@/lib/store";
 import { isMailable, upsertContact } from "@/lib/contacts";
-import { hasResend, isSenderConfigured, sendBatch, sendEmail, sentKey, sentThisMonth } from "@/lib/email";
+import { hasResend, isSenderConfigured, sendBatch, sendListBatch, sendEmail, sentKey, sentThisMonth } from "@/lib/email";
 import { listCeiling, reserveDay, senderRoom } from "@/lib/mail";
 import { LIST_TAG, STORE_TAG, healthId, listHealth } from "@/lib/mail-health";
 import { HOLD_SECONDS, isSesConfigured, notYetTaken, sesBulkRoom, sesConfig, sesSentLast24h, sesState } from "@/lib/ses";
@@ -75,12 +75,12 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   }
   if (url.hostname === "api.resend.com") {
     const key = (init?.headers as Record<string, string>)["Idempotency-Key"] ?? null;
-    // Resend answers a key it has seen without sending again.
-    if (key && resendKeys.has(key)) return json({ id: "again" });
-    if (key) resendKeys.add(key);
     const body = JSON.parse(String(init?.body)) as { to: string[]; subject: string } | { to: string[]; subject: string }[];
+    // Resend answers a key it has seen without sending again.
+    if (key && resendKeys.has(key)) return json(Array.isArray(body) ? { data: body.map((_, i) => ({ id: `again_${i}` })) } : { id: "again" });
+    if (key) resendKeys.add(key);
     for (const m of Array.isArray(body) ? body : [body]) resend.push({ to: m.to[0], subject: m.subject, key });
-    return json({ id: "email_1" });
+    return json(Array.isArray(body) ? { data: body.map((_, i) => ({ id: `email_${i + 1}` })) } : { id: "email_1" });
   }
   if (url.hostname === `sts.${REGION}.amazonaws.com`) {
     const form = new URLSearchParams(String(init?.body));
@@ -541,6 +541,9 @@ async function main(): Promise<void> {
       [amazon.length, resend.length, redis.run(["GET", usageKey]), await sentThisMonth()], [0, 0, "10", counted]);
   }
   is("usage getters and out-of-cardinality members were not evaluated", [usageGetters, usageOutside], [0, 0]);
+  await originalPipeline([["DEL", usageKey], ["HSET", usageKey, "unexpected", "10"]]);
+  is("a wrong-type hourly bucket is unknown, never known zero", await sesSentLast24h(), null);
+  is("wrong-type hourly evidence grants no list capacity", await senderRoom(), 0);
   if (oldUsage === null) await originalPipeline([["DEL", usageKey]]);
   else await originalPipeline([["SET", usageKey, String(oldUsage), "EX", 26 * 3_600]]);
   const usageAt = Date.UTC(2032, 0, 15, 12);
@@ -915,7 +918,7 @@ async function main(): Promise<void> {
   amazonSays = () => ({ status: 400, type: "AccountSuspendedException", message: "Sending paused for this account." });
   is("a sign-in link is sent all the same", await sendEmail(letter("buyer@example.com", "Your login link")), true);
   is("through Resend, in the same breath", [amazon.length, resend.filter((m) => m.to === "buyer@example.com").length], [0, 1]);
-  is("the site's own inbox is told, through Resend", resend.filter((m) => m.to === SUPPORT).map((m) => m.subject), ["Amazon SES is not sending: email is going out through Resend"]);
+  is("the site's own inbox is told, through Resend", resend.filter((m) => m.to === SUPPORT).map((m) => m.subject), ["Amazon SES is not sending: check the account"]);
   const held = await sesState();
   is("Amazon is left alone for ten minutes", [held?.ready, (held?.hold ?? 0) - Math.floor(Date.now() / 1000) > HOLD_SECONDS - 5], [false, true]);
   tries = 0;
@@ -967,6 +970,60 @@ async function main(): Promise<void> {
   await sendBatch(fifty(2), "bc:day:2", { by: "company" });
   is("fifty more do not: they go by Resend, whole, rather than wait", [amazon.length, resend.length], [50, 50]);
   is("and the rest of Amazon's day is still there for a sign-in link", [await sendEmail(letter("buyer@example.com", "Your login link")), amazon.length, resend.length], [true, 51, 50]);
+
+
+  part("List-only mail waits for SES without using the service fallback");
+  redis.clear(); resendKeys.clear(); clear();
+  const savedRole = process.env.AWS_SES_ROLE_ARN;
+  delete process.env.AWS_SES_ROLE_ARN;
+  is("missing SES leaves list recipients waiting without either sender",
+    [await sendListBatch([letter("list-missing@example.com")], "list:missing", { by: "monthly" }), amazon.length, resend.length],
+    ["waiting", 0, 0]);
+  process.env.AWS_SES_ROLE_ARN = savedRole;
+  account = approved({ SendingEnabled: false }); askAgain();
+  is("a paused account is known waiting, not unknown acceptance",
+    [await sendListBatch([letter("list-paused@example.com")], "list:paused", { by: "monthly" }), amazon.length, resend.length],
+    ["waiting", 0, 0]);
+  is("the existing Amazon-only probe contract still says retry",
+    await sendBatch([letter("probe-paused@example.com")], "list:probe", { by: "company" }, "amazon"), "retry");
+  is("service email still uses its default fallback",
+    [await sendEmail(letter("service-paused@example.com")), amazon.length, resend.filter(m => m.to === "service-paused@example.com").length],
+    [true, 0, 1]);
+  redis.clear(); resendKeys.clear(); clear();
+  account = approved({ SendQuota: { Max24HourSend: 0, MaxSendRate: 100 } });
+  is("no SES daily room cannot authorize a list Resend send",
+    [await sendListBatch([letter("list-day@example.com")], "list:day", { by: "monthly" }), amazon.length, resend.length],
+    ["waiting", 0, 0]);
+  redis.clear(); resendKeys.clear(); clear(); account = approved();
+  is("confirmed SES capacity sends the actual list batch",
+    [await sendListBatch([letter("list-healthy@example.com")], "list:healthy", { by: "monthly" }), amazon.map(m => m.to), resend.length],
+    ["sent", ["list-healthy@example.com"], 0]);
+  redis.clear(); resendKeys.clear(); clear(); account = approved();
+  amazonSays = () => ({ status: 400, type: "AccountSuspendedException", message: "Sending paused" });
+  is("a rejection after a send attempt remains held",
+    await sendListBatch([letter("list-refused@example.com")], "list:refused", { by: "monthly" }), "retry");
+  is("the list recipient never reaches Resend", resend.filter(m => m.to !== SUPPORT).length, 0);
+  is("the owner notice does not claim the list mail was delivered",
+    resend.filter(m => m.to === SUPPORT).map(m => m.subject), ["Amazon SES is not sending: check the account"]);
+  redis.clear(); resendKeys.clear(); clear(); account = approved();
+  amazonSays = () => ({ status: 400, type: "BadRequestException", message: "Synthetic confirmed recipient refusal" });
+  is("a known recipient refusal cannot be called a sent list",
+    [await sendListBatch([letter("list-rejected@example.com")], "list:rejected", { by: "monthly" }), amazon.length, resend.length],
+    ["refused", 0, 0]);
+  redis.clear(); resendKeys.clear(); clear(); account = approved();
+  amazonSays = to => to === "list-bad@example.com" ? { status: 400, type: "BadRequestException", message: "Synthetic confirmed refusal" } : { status: 200 };
+  const mixedList = [letter("list-good@example.com"), letter("list-bad@example.com")];
+  is("partial acceptance holds the caller rather than authorizing automatic replay",
+    await sendListBatch(mixedList, "list:mixed", { by: "monthly" }), "retry");
+  is("the held partial batch has one accepted recipient and no fallback",
+    [amazon.map(m => m.to), resend.length], [["list-good@example.com"], 0]);
+  redis.clear(); resendKeys.clear(); clear(); account = approved();
+  amazonSays = () => ({ status: 200 });
+  amazonLosesReply = to => to === "list-unknown@example.com" ? 500 : null;
+  is("unknown SES acceptance never becomes safe waiting or fallback",
+    [await sendListBatch([letter("list-unknown@example.com")], "list:unknown", { by: "monthly" }), amazon.length, resend.length],
+    ["retry", 1, 0]);
+  amazonLosesReply = () => null; account = approved();
 
   part("Amazon does not answer");
   account = 500;
