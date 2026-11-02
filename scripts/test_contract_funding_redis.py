@@ -8,6 +8,44 @@ import uuid
 from test_form_opportunity_redis import Redis
 
 
+def measured_command(client, operation):
+    """Observe exactly one application command and its Lua calls atomically.
+
+    INFO commandstats is server-wide. The CI service's independent health PING
+    must not enter the application budget. MULTI/EXEC is test instrumentation:
+    no other client runs between INFO, the actual command, and the final INFO.
+    No application command name is filtered; even Lua PING remains counted.
+    """
+    def counts(raw):
+        if not isinstance(raw, str):
+            raise AssertionError('Expected INFO commandstats text')
+        return {name: int(calls) for name, calls in
+                re.findall(r'cmdstat_([^:]+):calls=(\d+)', raw)}
+    started = False
+    try:
+        assert client.command('MULTI') == 'OK'
+        started = True
+        assert client.command('INFO', 'commandstats') == 'QUEUED'
+        assert operation() == 'QUEUED', 'Expected one queued application command'
+        assert client.command('INFO', 'commandstats') == 'QUEUED'
+        replies = client.command('EXEC')
+        started = False
+        assert isinstance(replies, list) and len(replies) == 3, 'Expected exactly one application command'
+        before, after = counts(replies[0]), counts(replies[2])
+        delta = {name: after.get(name, 0) - before.get(name, 0)
+                 for name in before.keys() | after.keys()}
+        # The first INFO completes after its snapshot, so exactly one
+        # observer INFO enters the delta; the final one completes afterward.
+        # Preserve any additional INFO executed by the application Lua.
+        assert delta.get('info', 0) >= 1, delta
+        delta['info'] -= 1
+        assert all(value >= 0 for value in delta.values()), delta
+        return replies[1], {name: value for name, value in delta.items() if value}
+    finally:
+        if started:
+            client.command('DISCARD')
+
+
 def main():
     if os.environ.get('MARKTMORGEN_REDIS_INTEGRATION') != '1':
         raise RuntimeError('Use dedicated CI Redis on loopback port 16379 only')
@@ -61,6 +99,8 @@ def main():
     prefix = 'marktmorgen:integration:contract:' + uuid.uuid4().hex + ':'
     keys = [prefix + str(i) for i in range(45)]
     intent_refs = ['synthetic-restart-intent-' + uuid.uuid4().hex + '-' + str(i) for i in range(3)]
+    from test_contract_command_measurement import main as check_measurement
+    check_measurement()
     redis = Redis()
     joint_owned_keys = []
     def snapshot(key):
@@ -670,17 +710,14 @@ def main():
         match = re.search(r'restartIntent:\{[^}]*commandCeiling:(\d+)', rule_source)
         assert match
         intent_ceiling = int(match.group(1))
-        before_calls = command_counts()
-        first_ack = intent_claim(redis, keys[44], intent_refs[2], pause)
-        first = difference(before_calls, command_counts())
-        assert sum(first.values()) <= intent_ceiling
+        first_ack, first = measured_command(redis, lambda: intent_claim(redis, keys[44], intent_refs[2], pause))
+        assert first.get('eval') == 1 and sum(first.values()) <= intent_ceiling, first
         assert isinstance(first_ack, list) and len(first_ack) == 2 and first_ack[0] == 1
         assert first_ack[1] == redis.command('HGET', keys[44], 'restart-intent:ctr_restart_new')
         committed = snapshot(keys[44])
-        before_calls = command_counts()
-        assert intent_claim(redis, keys[44], intent_refs[2], pause) == 0
-        duplicate = difference(before_calls, command_counts())
-        assert sum(duplicate.values()) <= intent_ceiling
+        duplicate_ack, duplicate = measured_command(redis, lambda: intent_claim(redis, keys[44], intent_refs[2], pause))
+        assert duplicate_ack == 0
+        assert duplicate.get('eval') == 1 and sum(duplicate.values()) <= intent_ceiling, duplicate
         assert intent_claim(redis, keys[44], intent_refs[2], pause, claim='claim_after_lost_ack') == 0
         assert intent_claim(redis, keys[44], intent_refs[2], pause, now=1800000301) == 0
         assert snapshot(keys[44]) == committed
