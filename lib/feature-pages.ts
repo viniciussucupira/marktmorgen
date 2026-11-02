@@ -60,6 +60,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "and pipelines",
     intro: "Keep contact facts, deal stages and the next conversation in the same studio as your products. Deal values are what your team records, not a forecast or a promise of revenue.",
     seo: { title: "People, deals and pipelines — Marktmorgen CRM", description: "Custom contact fields, deal stages and separate pipelines for a creator's store, with published limits and opt-in email workflows. Paid selling remains closed." },
+    visual: "crm",
     badge: WORKING,
     accent: "from-violet-brand to-pink-brand",
     plan: "creator",

@@ -4,7 +4,7 @@
  * Discord access (units 2 and 3), the community and affiliates (unit 4),
  * the team and email platforms (unit 6), PDF stamping and ways to pay
  * (unit 7), phone notifications (unit 8), security (unit 9), the sales page
- * editor and its writing help (unit 10), live events (unit 5; the reviews page has none, since a drawn review would
+ * editor and its writing help (unit 10), the deals board (unit 11), live events (unit 5; the reviews page has none, since a drawn review would
  * be an invented one),
  * each a piece of the
  * studio's real screen in HTML, with its words and figures from the code.
@@ -17,10 +17,12 @@
 import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AI_LEFT_EXAMPLE, EXAMPLE_KEY, FeatureVisual, SALES_PAGE_EXAMPLE } from "@/components/feature-visuals";
+import { AI_LEFT_EXAMPLE, CRM_EXAMPLE, CRM_PIPELINES, EXAMPLE_KEY, FeatureVisual, SALES_PAGE_EXAMPLE } from "@/components/feature-visuals";
 import { BLOCK_KINDS, MAX_BENEFITS, MAX_BLOCKS, MAX_CTA_LABEL, MAX_FAQ_ITEMS, MAX_FIT_ITEMS, MAX_HEADLINE, MAX_INSIDE_ITEMS } from "@/lib/sales-page";
 import { KIND_ICONS } from "@/lib/sales-page-icons";
 import { AI_MONTHLY, AI_PLANS_WORDS } from "@/lib/ai-rules";
+import { DEFAULT_STAGES, FIRST_PIPELINE_NAME, PIPELINES_BY_TIER, pipelineLimit } from "@/lib/crm-rules";
+import { PLAN_TITLES } from "@/lib/plan";
 import { MAX_BUNDLE_ITEMS, MIN_BUNDLE_ITEMS } from "@/lib/bundle-rules";
 import { DEFAULT_ATTEMPTS, DEFAULT_PASS_PERCENT } from "@/lib/quiz";
 import { DEFAULT_KEYS } from "@/lib/key-setup";
@@ -44,7 +46,7 @@ import { done, is, part } from "./check";
 
 const text = (html: string) => html.replace(/<[^>]+>/g, "\n").replace(/&#x27;/g, "'").replace(/&amp;/g, "&").split("\n").map((s) => s.trim()).filter(Boolean);
 const read = (file: string) => readFileSync(file, "utf8");
-const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security" | "salesPage" | "aiWriting") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
+const draw = (visual: "bundles" | "quizzes" | "keys" | "webhooks" | "calendar" | "discord" | "community" | "affiliates" | "events" | "team" | "emailPlatforms" | "stamp" | "ways" | "phone" | "security" | "salesPage" | "aiWriting" | "crm") => renderToStaticMarkup(createElement(FeatureVisual, { visual, tone: "light" }));
 const hidden = (html: string) => html.startsWith('<figure class="w-full min-w-0 max-w-[26rem]"><div aria-hidden="true">');
 
 function main(): void {
@@ -279,6 +281,29 @@ function main(): void {
   is("the jobs left are said to be an example, on the plans that have it", ai.some((w) => /example/.test(w) && /jobs left/.test(w) && w.includes(`on ${AI_PLANS_WORDS}.`)), true);
   is("drawn, hidden, beside its caption", hidden(aw), true);
 
+  part("Deals");
+  is("the CRM page shows its card, and it is a Store plan page", [findPage("platform", "crm")?.visual, findPage("platform", "crm")?.plan], ["crm", "creator"]);
+  const cr = draw("crm");
+  const cw = text(cr);
+  const board = read("components/deals-board.tsx");
+  const dealsPage = read("app/studio/deals/page.tsx");
+  const flat = (src: string) => src.replace(/\s+/g, " ");
+  const kindOf = (id: string) => DEFAULT_STAGES.find((st) => st.id === id)?.kind;
+  const openDeals = CRM_EXAMPLE.filter((d) => kindOf(d.stage) === "open");
+  const wonSum = CRM_EXAMPLE.filter((d) => kindOf(d.stage) === "won").reduce((n, d) => n + d.cents, 0);
+  const openSum = openDeals.reduce((n, d) => n + d.cents, 0);
+  is("the heading and its sentence, summed from the deals drawn, one pipeline so no pipeline name in it", [cw.includes("Deals"), cw.includes(`People you are talking to about something sold outside a checkout: a coaching package, a custom project. ${openDeals.length} open, worth ${formatMoney(openSum, "usd")}; won so far, ${formatMoney(wonSum, "usd")}.`), flat(board).includes(flat("`People you are talking to about something sold outside a checkout: a coaching package, a custom project.${pipelines.length > 1 ? ` In ${pipeline.name}:` : \"\"} ${open.reduce((n, t) => n + t.count, 0)} open, worth ${money(open.reduce((n, t) => n + t.cents, 0))}; won so far, ${money(won.reduce((n, t) => n + t.cents, 0))}.`"))], [true, true, true]);
+  is("New deal, and the first pipeline's button with its open count", [cw.includes("New deal"), /New deal/.test(board), cw.includes(FIRST_PIPELINE_NAME) && cw.includes(`· ${openDeals.length} open`), board.includes("{` · ${t.open.count} open`}"), FIRST_PIPELINE_NAME], [true, true, true, true, "Sales"]);
+  is("New pipeline, since a paid Store plan keeps more than one, as the board's page counts them", [cw.includes("New pipeline"), CRM_PIPELINES, pipelineLimit({ tier: "creator", subscriptionActive: true, trialEnds: 0 }) > 1, dealsPage.includes("pipelineMax={pipelineLimit(store)}"), board.includes("pipelines.length < pipelineMax")], [true, PIPELINES_BY_TIER.creator, true, true, true]);
+  is("the stages a store starts with, each column with its count and total", DEFAULT_STAGES.slice(0, 2).map((st) => { const here = CRM_EXAMPLE.filter((d) => d.stage === st.id); return cw.includes(st.name) && cw.includes(`${here.length} · ${formatMoney(here.reduce((n, d) => n + d.cents, 0), "usd")}`); }).concat([board.includes("{`${count} · ${money(cents)}`}")]), [true, true, true]);
+  is("each deal as the board writes it, in its own stage", [CRM_EXAMPLE.every((d) => cw.includes(d.title) && cw.includes(formatMoney(d.cents, "usd"))), cw.includes("Next: Follow up on the proposal"), board.includes("Next: {deal.nextAction}"), cw.includes("sam@example.com"), cw.filter((w) => w === "Edit").length, /\n\s*Edit\n/.test(board), CRM_EXAMPLE.every((d) => { const name = DEFAULT_STAGES.find((st) => st.id === d.stage)?.name ?? ""; const at = cw.indexOf(d.title); return at >= 0 && cw.slice(at).includes(name); })], [true, true, true, true, 2, true, true]);
+  is("Request payment on the deal with an email only, for a role that may send (the owner may)", [cw.filter((w) => w === "Request payment").length, CRM_EXAMPLE.filter((d) => "email" in d).length, board.includes("{requestHref && deal.email ? ("), dealsPage.includes('requestHref={can(view.role, "send") ?'), can("owner", "send")], [1, 1, true, true, true]);
+  is("no due date drawn, which the board would turn red once it has passed", cw.some((w) => /^Due /.test(w)), false);
+  is("a deal's name and next action are the editor's own placeholders", [board.includes('placeholder="Six coaching sessions for Dana"'), board.includes('placeholder="Follow up on the proposal"')], [true, true]);
+  is("the caption: part of the board, the owner on the Store plan, the break, the stages left out, and recorded values that are not revenue", cw.some((w) => /^Part of the deals board/.test(w) && w.includes(`on the ${PLAN_TITLES.creator} plan`) && /totals and filters sit at the break, and three more stages follow/.test(w) && /not revenue/.test(w) && /example/.test(w)), true);
+  is("three more stages do follow", DEFAULT_STAGES.length - 2, 3);
+  is("drawn, hidden, beside its caption", hidden(cr), true);
+
   part("Nothing that is not the code's or marked as an example");
   for (const [name, words, allowed] of [
     ["bundles", b, /^(In it: 3 of \d+|\$77 of products for \$49|\$\d+(\.\d\d)?|.*example.*)$/],
@@ -295,6 +320,7 @@ function main(): void {
     ["team", t, new RegExp(`^(2 of ${MAX_TEAM} places used|Joined Oct 3, 2026|Invited as ${ROLE_NAMES.support} · the link works until Nov 8|.*example.*)$`)],
     ["sales pages", sg, new RegExp(`^(\\d\\. (${BLOCK_KINDS.map((k) => k.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})|${blocks.length} blocks live on its page\\.|What you get · 5 items|\\d items|3 for, 2 not for|Add a block \\(${blocks.length} of ${MAX_BLOCKS}\\)|.*example.*)$`)],
     ["ai writing", ai, new RegExp(`^(${AI_LEFT_EXAMPLE} left this month\\. .*|.*example.*)$`)],
+    ["deals", cw, /^(People you are talking to .* 2 open, worth \$1,800; won so far, \$0\.|· 2 open|1 · \$(600|1,200)|\$(600|1,200)|.*example.*)$/],
     ["events", e, /^(2 coming up|\w+day, November (10|19)\b.* \(E[SD]T\) · (1 hour|45 minutes)|12 of 30 places taken|8 going|The way in shows \d+ minutes before the start, only to members who can come\.|.*example.*)$/],
   ] as const) {
     is(`${name}: every figure is the code's, or an example said as one`, words.filter((w) => /\d/.test(w) && !allowed.test(w)), []);
