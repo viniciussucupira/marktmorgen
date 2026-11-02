@@ -120,7 +120,8 @@ export async function physicalPaidFixture() {
           } else if (op === "cursor") answer = ["cursor", raw];
           else if (op === "url" && r.session && r.phase === "awaiting_payment" && ["queued", "preparing"].includes(r.state) &&
               redis.run(["GET", k[1]]) === r.sourceValue && redis.run(["EXISTS", k[8]]) === 0 && redis.run(["EXISTS", k[9]]) === 0) {
-            answer = ["url", r.id, r.session, r.bindingFingerprint, String(now()), String(Math.min(now() + 1000, r.expiresAt))];
+            const serverNow = now();
+            answer = ["url", r.id, r.session, r.bindingFingerprint, String(serverNow), String(Math.min(serverNow + 1000, r.expiresAt))];
           }
         }
         if (lose === op) { lose = null; throw Error("Synthetic lost ACK after durable source mutation"); }
