@@ -194,29 +194,30 @@ export async function readCourseConfirmationOrigin(id: string, runtime: Shipment
       binding.preintent.token !== found.payload.preintentToken || binding.preintent.intentFingerprint !== found.row.intentFingerprint ||
       binding.candidate.identity.statsId !== found.row.statsId || binding.candidate.identity.accountId !== found.row.accountId ||
       binding.expiresAtMs !== found.row.expiresAt) return null;
+  const snapshot = data(found.payload.snapshot);
+  if (!snapshot || Object.keys(snapshot).length !== 1 || !Object.hasOwn(snapshot, "selected") ||
+      JSON.stringify(snapshot.selected) !== JSON.stringify(binding.candidate)) return null;
   return { ...found, binding: Object.freeze({ ...binding, token, fingerprint: hash(token) }) };
 }
 
 /** No caller is connected to this construction. The future trusted producer
  * must first obtain Store/product from actual server reads; a signed selected
  * snapshot is not proof of database ownership, buyer, funding or payment. */
-export async function reserveCourseConfirmationOrigin(input: {
-  bindingToken: string; nonce: string; snapshot: Record<string, unknown>;
-}, runtime: ShipmentMailRuntime = {}): Promise<{ ok: true; id: string; admitted: false; permitsCheckout: false; grantsAccess: false } | { ok: false }> {
+export async function reserveCourseConfirmationOrigin(input: unknown, runtime: ShipmentMailRuntime = {}): Promise<{ ok: true; id: string; admitted: false; permitsCheckout: false; grantsAccess: false } | { ok: false }> {
   const policy = confirmationOutboxPolicy(runtime);
   if (!policy?.coveredOrigins?.includes("course-confirmation")) return { ok: false };
   try {
     const value = data(input);
-    if (!value || Object.keys(value).length !== 3 || !["bindingToken", "nonce", "snapshot"].every(k => Object.hasOwn(value, k))) return { ok: false };
+    if (!value || Object.keys(value).length !== 2 || !["bindingToken", "nonce"].every(k => Object.hasOwn(value, k))) return { ok: false };
     const binding = openCourseOriginBinding(value.bindingToken, value.nonce, (runtime.now ?? Date.now)());
     if (!binding || typeof value.bindingToken !== "string") return { ok: false };
-    const snapshot = snapshotData(value.snapshot) as Record<string, unknown>, store = data(snapshot.store), product = data(snapshot.product), course = data(product?.course);
-    const { identity, original } = binding.candidate;
-    if (!store || !product || !course || store.sid !== identity.sid || store.statsId !== identity.statsId || store.stripeAccountId !== identity.accountId ||
-        store.handle !== original.handle || store.name !== original.storeName || store.email !== original.ownerEmail || store.currency !== original.currency || store.language !== original.language ||
-        product.id !== identity.productId || course.id !== identity.courseId || product.title !== original.title || product.priceCents !== original.priceCents) return { ok: false };
-    const result = await reserveOrigin({ statsId: identity.statsId, nonce: binding.nonce, accountId: identity.accountId,
-      body: binding.body, preintent: binding.preintent, snapshot }, runtime, { token: value.bindingToken, fingerprint: hash(value.bindingToken) });
+    // Only these authenticated selected fields are durable payload data.
+    // The complete original preintent token is the accounting evidence; no
+    // caller tier/cycle/period/Store clone is certified by this construction.
+    const snapshot = { selected: binding.candidate };
+    const result = await reserveOrigin({ statsId: binding.candidate.identity.statsId, nonce: binding.nonce, accountId: binding.candidate.identity.accountId,
+      body: binding.body, preintent: binding.preintent, snapshot }, runtime,
+      { token: value.bindingToken, fingerprint: hash(value.bindingToken), selected: binding.candidate });
     if (!result.ok) return result;
     // The persisted winner, not an enqueue-looking reply, is the evidence.
     const saved = await readCourseConfirmationOrigin(result.id, runtime);
@@ -233,7 +234,7 @@ async function reserveOrigin(input: {
   statsId: string | null; nonce: string; accountId: string; body: string;
   preintent: { token: string; expiresAtMs: number; intentFingerprint: string };
   snapshot: Record<string, unknown>;
-}, runtime: ShipmentMailRuntime = {}, course?: { token: string; fingerprint: string }): Promise<{ ok: true; id: string } | { ok: false }> {
+}, runtime: ShipmentMailRuntime = {}, course?: { token: string; fingerprint: string; selected: OpenedCourseOriginBinding["candidate"] }): Promise<{ ok: true; id: string } | { ok: false }> {
   const p = confirmationOutboxPolicy(runtime);
   if (!p || !canSeal()) return { ok: false };
   try {
@@ -253,8 +254,11 @@ async function reserveOrigin(input: {
     const proof = data(JSON.parse(opened.value)), original = data(proof?.original);
     const snapshot = snapshotData(input.snapshot) as Record<string, unknown>, snapshotStore = data(snapshot.store);
     const owner = snapshotStore?.extra === true ? `#${snapshotStore.sid}` : snapshotStore?.email;
+    const ownerMatches = course
+      ? original && (original.owner === course.selected.original.ownerEmail.toLowerCase() || original.owner === `#${course.selected.identity.sid}`)
+      : original?.owner === owner && snapshotStore?.statsId === statsId && snapshotStore?.stripeAccountId === input.accountId;
     if (!proof || !original || proof.version !== 1 || proof.nonce !== input.nonce || proof.accountId !== input.accountId || proof.bodyDigest !== bodyDigest ||
-        original.until !== input.preintent.expiresAtMs || original.owner !== owner || snapshotStore?.statsId !== statsId || snapshotStore?.stripeAccountId !== input.accountId) return { ok: false };
+        original.until !== input.preintent.expiresAtMs || !ownerMatches) return { ok: false };
     const pipeline = runtime.pipeline ?? redisPipeline;
     const now = await serverNow(pipeline), id = confirmationOriginId(statsId, input.nonce);
     if (now === null || Math.abs(now - (runtime.now ?? Date.now)()) > 60_000 || input.preintent.expiresAtMs <= now) return { ok: false };

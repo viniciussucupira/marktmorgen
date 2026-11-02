@@ -39,7 +39,7 @@ async function fixture(){
    }
    return answers;
   }};
- return {selected,issued,runtime,commands,loseNext:()=>{lose=true;},input:{bindingToken:issued.token,nonce,snapshot:{store,product:world.product}}};
+ return {selected,issued,runtime,commands,loseNext:()=>{lose=true;},input:{bindingToken:issued.token,nonce}};
 }
 const closed={admitted:false,permitsCheckout:false,grantsAccess:false};
 test("a course requires explicit coverage in the existing storage review, with no default IO",async()=>{
@@ -55,6 +55,8 @@ test("the protected immutable course winner is recovered after lost ACK without 
  const saved=await origin.readCourseConfirmationOrigin(result.id,f.runtime);assert.ok(saved);
  assert.equal(saved.binding.token,f.issued.token);assert.equal(saved.binding.fingerprint,createHash("sha256").update(f.issued.token).digest("hex"));
  assert.equal(saved.binding.candidate.identity.courseId,f.selected.product.course.id);
+ assert.deepEqual(Object.keys(saved.payload.snapshot),["selected"]);
+ assert.deepEqual(saved.payload.snapshot.selected,saved.binding.candidate);
  assert.equal(saved.row.phase,"course_reserved");assert.equal(saved.row.created,f.runtime.now());
  assert.equal(redis.run(["TTL",origin.confirmationOriginRowKey(result.id)]),-1);
  assert.equal(redis.run(["TTL",`nl:order-confirmation:source:${result.id}`]),-1);
@@ -74,13 +76,13 @@ test("course reservation cannot become physical checkout, worker, payment or ema
  await origin.runOrderConfirmationMail(f.runtime.now()+10000,async()=>{dispatch++;return "accepted";},runtime,result.id);
  assert.equal(provider,0);assert.equal(dispatch,0);
  assert.equal(f.commands.slice(before).some(c=>c[0]==="EVAL"),false,"unsupported stages must stop before mutation");
- const snapshot={...f.input.snapshot,store:{...f.input.snapshot.store,sid:"d".repeat(32)}};
+ const snapshot={store:{...f.selected.store,sid:"d".repeat(32)},product:f.selected.product};
  assert.deepEqual(await origin.reserveCourseConfirmationOrigin({...f.input,snapshot},f.runtime),{ok:false});
 });
 
 test("an issuer-selected original store name cannot be replaced before persistence",async()=>{
- const f=await fixture();f.input.snapshot.store.name="Changed after issuance";
- assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,f.runtime),{ok:false});
+ const f=await fixture();const snapshot={store:{...f.selected.store,name:"Changed after issuance"},product:f.selected.product};
+ assert.deepEqual(await origin.reserveCourseConfirmationOrigin({...f.input,snapshot},f.runtime),{ok:false});
  assert.equal(f.commands.length,0);
 });
 test("course financial coverage is own bounded data, with no inherited or executable permission",async()=>{
@@ -98,19 +100,20 @@ test("foreign, malformed and forged selected origins fail before persistence IO"
   const f=await fixture();let getters=0;
   if(which==="nonce")f.input.nonce="d".repeat(64);
   if(which==="token")f.input.bindingToken="s1.not-a-course-proof";
-  if(which==="stats")f.input.snapshot.store.statsId="f".repeat(32);
-  if(which==="account")f.input.snapshot.store.stripeAccountId="acct_ForeignCourse01";
-  if(which==="course")f.input.snapshot.product.course.id="f".repeat(32);
-  if(which==="product")f.input.snapshot.product.id="another-original-product";
+  const snapshot={store:{...f.selected.store},product:{...f.selected.product,course:{...f.selected.product.course}}};
+  if(which==="stats")snapshot.store.statsId="f".repeat(32);
+  if(which==="account")snapshot.store.stripeAccountId="acct_ForeignCourse01";
+  if(which==="course")snapshot.product.course.id="f".repeat(32);
+  if(which==="product")snapshot.product.id="another-original-product";
   if(which==="getter")Object.defineProperty(f.input,"bindingToken",{get(){getters++;return f.issued.token;}});
-  assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,f.runtime),{ok:false},which);
+  assert.deepEqual(await origin.reserveCourseConfirmationOrigin(["stats","account","course","product"].includes(which)?{...f.input,snapshot}:f.input,f.runtime),{ok:false},which);
   assert.equal(getters,0);assert.equal(f.commands.length,0,which);
  }
 });
 test("a course body cannot downgrade through the unchanged physical producer",async()=>{
  const f=await fixture();const {openCourseOriginBinding}=await import("@/lib/course-origin-binding");
  const binding=openCourseOriginBinding(f.issued.token,f.issued.nonce);assert.ok(binding);
- assert.deepEqual(await origin.reserveConfirmationOrigin({statsId:f.selected.store.statsId,nonce:binding.nonce,accountId:f.selected.store.stripeAccountId!,body:binding.body,preintent:binding.preintent,snapshot:f.input.snapshot},f.runtime),{ok:false});
+ assert.deepEqual(await origin.reserveConfirmationOrigin({statsId:f.selected.store.statsId,nonce:binding.nonce,accountId:f.selected.store.stripeAccountId!,body:binding.body,preintent:binding.preintent,snapshot:{store:f.selected.store,product:f.selected.product}},f.runtime),{ok:false});
  assert.equal(f.commands.length,0);
 });
 test("an enqueue-looking ACK with no persisted winner cannot report a durable course",async()=>{
@@ -126,10 +129,11 @@ test("an enqueue-looking ACK with no persisted winner cannot report a durable co
 test("an unsigned replacement accounting or mixed product snapshot is not accepted as the selected source",async()=>{
  for(const change of ["tier","period","mixed-course"]){
   const f=await fixture();
-  if(change==="tier")f.input.snapshot.store.tier="scale";
-  if(change==="period")f.input.snapshot.store.period={...f.input.snapshot.store.period!,start:1,end:2};
-  if(change==="mixed-course")Object.assign(f.input.snapshot.product,{call:{minutes:30}});
-  assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,f.runtime),{ok:false},change);
+  const snapshot={store:{...f.selected.store},product:{...f.selected.product}};
+  if(change==="tier")snapshot.store.tier="scale";
+  if(change==="period")snapshot.store.period={...snapshot.store.period!,start:1,end:2};
+  if(change==="mixed-course")Object.assign(snapshot.product,{call:{minutes:30}});
+  assert.deepEqual(await origin.reserveCourseConfirmationOrigin({...f.input,snapshot},f.runtime),{ok:false},change);
   assert.equal(f.commands.length,0);
  }
 });
