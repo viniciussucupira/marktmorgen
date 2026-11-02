@@ -301,3 +301,34 @@ test("an unpaid winner remains viewable while the real worker prepares it, unles
     } finally { release(); await worker; }
   }
 });
+
+
+for (const [name, make] of [["checkout fixture", fixture], ["paid worker fixture", physicalPaidFixture]] as const) {
+  test(`${name} captures one URL acknowledgement timestamp even when every clock read advances1ms`, async () => {
+    const original = Object.getOwnPropertyDescriptor(Date, "now")!;
+    const epoch = Math.floor(Date.now() / 1000) * 1000 + 100;
+    let reads = 0;
+    try {
+      Object.defineProperty(Date, "now", { configurable: true, value: () => epoch + reads++ });
+      const f = await make();
+      const acknowledgements: string[][] = [], pipeline = f.runtime.pipeline!;
+      f.runtime.pipeline = async commands => {
+        const answer = await pipeline(commands);
+        if (commands[0]?.[0] === "EVAL" && commands[0]?.[13] === "url") {
+          acknowledgements.push((answer as string[][])[0]);
+        }
+        return answer;
+      };
+      let checkout: { id: string; url: string } | null = null;
+      await assert.doesNotReject(async () => { checkout = await createCheckout(f.store, f.product, "https://example.test", undefined, {}, f.runtime); });
+      assert.ok(checkout);
+      assert.deepEqual(await openConfirmationOrigin(originId(), f.runtime), checkout);
+      assert.equal(f.calls.filter(c => c.method === "POST").length, 1);
+      assert.equal(acknowledgements.length, 2);
+      for (const ack of acknowledgements) assert.equal(Number(ack[5]) - Number(ack[4]), 1000, "the fake must capture one Redis TIME equivalent, just like the actual Lua");
+      assert.ok(reads > 1);
+    } finally {
+      Object.defineProperty(Date, "now", original);
+    }
+  });
+}
