@@ -77,3 +77,48 @@ test("course reservation cannot become physical checkout, worker, payment or ema
  const snapshot={...f.input.snapshot,store:{...f.input.snapshot.store,sid:"d".repeat(32)}};
  assert.deepEqual(await origin.reserveCourseConfirmationOrigin({...f.input,snapshot},f.runtime),{ok:false});
 });
+
+test("an issuer-selected original store name cannot be replaced before persistence",async()=>{
+ const f=await fixture();f.input.snapshot.store.name="Changed after issuance";
+ assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,f.runtime),{ok:false});
+ assert.equal(f.commands.length,0);
+});
+test("course financial coverage is own bounded data, with no inherited or executable permission",async()=>{
+ const f=await fixture();let getters=0;
+ for(const value of [[],["course-confirmation","course-confirmation"],["future"],Object.assign(new Array(1),{}),Object.create(["course-confirmation"])]){
+  assert.equal(shipmentMailPolicy({...f.runtime.policy,coveredOrigins:value}),null);
+ }
+ const accessor=["course-confirmation"];Object.defineProperty(accessor,"0",{get(){getters++;return "course-confirmation";}});
+ assert.equal(shipmentMailPolicy({...f.runtime.policy,coveredOrigins:accessor}),null);assert.equal(getters,0);
+ const policy=Object.create({coveredOrigins:["course-confirmation"]});Object.assign(policy,shipmentPolicy(Date.now()));
+ assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,{...f.runtime,policy}),{ok:false});assert.equal(f.commands.length,0);
+});
+test("foreign, malformed and forged selected origins fail before persistence IO",async()=>{
+ for(const which of ["nonce","token","stats","account","course","product","getter"]){
+  const f=await fixture();let getters=0;
+  if(which==="nonce")f.input.nonce="d".repeat(64);
+  if(which==="token")f.input.bindingToken="s1.not-a-course-proof";
+  if(which==="stats")f.input.snapshot.store.statsId="f".repeat(32);
+  if(which==="account")f.input.snapshot.store.stripeAccountId="acct_ForeignCourse01";
+  if(which==="course")f.input.snapshot.product.course.id="f".repeat(32);
+  if(which==="product")f.input.snapshot.product.id="another-original-product";
+  if(which==="getter")Object.defineProperty(f.input,"bindingToken",{get(){getters++;return f.issued.token;}});
+  assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,f.runtime),{ok:false},which);
+  assert.equal(getters,0);assert.equal(f.commands.length,0,which);
+ }
+});
+test("a course body cannot downgrade through the unchanged physical producer",async()=>{
+ const f=await fixture();const {openCourseOriginBinding}=await import("@/lib/course-origin-binding");
+ const binding=openCourseOriginBinding(f.issued.token,f.issued.nonce);assert.ok(binding);
+ assert.deepEqual(await origin.reserveConfirmationOrigin({statsId:f.selected.store.statsId,nonce:binding.nonce,accountId:f.selected.store.stripeAccountId!,body:binding.body,preintent:binding.preintent,snapshot:f.input.snapshot},f.runtime),{ok:false});
+ assert.equal(f.commands.length,0);
+});
+test("an enqueue-looking ACK with no persisted winner cannot report a durable course",async()=>{
+ const f=await fixture(),pipeline=f.runtime.pipeline;
+ const runtime={...f.runtime,pipeline:async(commands:(string|number)[][])=>{
+  if(commands[0]?.[0]==="EVAL")return [["queued",String(commands[0][15])]];
+  return pipeline(commands);
+ }};
+ assert.deepEqual(await origin.reserveCourseConfirmationOrigin(f.input,runtime),{ok:false});
+ assert.equal([...redis.keys()].some(k=>k.startsWith("nl:order-confirmation:row:")),false);
+});
