@@ -2302,6 +2302,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "with you",
     intro:
       "Four spreadsheets, from Stan, Gumroad, Kajabi, Patreon, Mailchimp or anywhere else: your list, your products, the people who already bought from you and your members. You say which column is which, and every row that is not brought in is listed with the reason.",
+    visual: "importDone",
     badge: WORKING,
     accent: "from-violet-brand to-sky-brand",
     plan: "creator",
@@ -2367,6 +2368,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "with you",
     intro:
       "Your contacts with their consent status, your products, the people who already bought from you and your funnel's pages, from the files ClickFunnels lets you export and the pages you save from your own browser. Each one is checked in a dry run that saves nothing and shows what every row and every page will become, then imported once.",
+    visual: "dryRun",
     badge: WORKING,
     accent: "from-violet-brand to-amber-brand",
     plan: "creator",

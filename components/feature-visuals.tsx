@@ -23,6 +23,7 @@ import { DEFAULT_STAGES, FIRST_PIPELINE_NAME, pipelineLimit, type Deal } from "@
 import { OUTREACH_COUNTRIES, pitchFooter } from "@/lib/outreach-rules";
 import { SITE_URL } from "@/lib/site-url";
 import { HOUSE_HANDLE } from "@/lib/house-store";
+import { IMPORT_DATE, IMPORT_LEFT_WORDS, IMPORT_WORDS, OUTCOME_WORDS, type Outcome } from "@/lib/import-words";
 
 /**
  * The pictures at the top of each feature page.
@@ -63,7 +64,9 @@ export type VisualKey =
   | "salesPage"
   | "aiWriting"
   | "crm"
-  | "outreach";
+  | "outreach"
+  | "importDone"
+  | "dryRun";
 
 /*
  * The frame every one of these mockups sits in.
@@ -1266,6 +1269,122 @@ function OutreachVisual() {
   );
 }
 
+/**
+ * One of "Your last imports" in the studio (app/studio/import/page.tsx,
+ * PastImports, with components/import-tool.tsx's ImportProgress, compact): an
+ * email list brought in from a spreadsheet and finished, its file, its day in
+ * UTC and its rows, the four counts in the tool's words for a list, which add
+ * up to the rows (within a month of the Store plan, IMPORT_ALLOWANCES), and
+ * the link to the rows that were not brought in. The file, the day and the
+ * counts are an example.
+ */
+export const IMPORT_EXAMPLE = {
+  file: "newsletter-subscribers.csv",
+  at: Date.UTC(2026, 9, 30, 14, 5),
+  counts: { added: 912, already: 41, skipped: 12, errors: 3 },
+};
+
+function ImportDoneVisual() {
+  const { file, at, counts } = IMPORT_EXAMPLE;
+  const rows = counts.added + counts.already + counts.skipped + counts.errors;
+  const words = IMPORT_WORDS.contacts;
+  const tiles = [
+    { label: words.added, n: counts.added, tone: "bg-mint-soft", text: "text-mint-deep" },
+    { label: words.already, n: counts.already, tone: "bg-paper", text: "text-ink-soft" },
+    { label: IMPORT_LEFT_WORDS.skipped, n: counts.skipped, tone: "bg-paper", text: "text-ink-soft" },
+    { label: IMPORT_LEFT_WORDS.errors, n: counts.errors, tone: counts.errors ? "bg-danger-soft" : "bg-paper", text: counts.errors ? "text-danger" : "text-ink-soft" },
+  ];
+  return (
+    <Window bar="Studio · Import">
+      <div className="space-y-2 p-5">
+        <p className="text-[13px] font-bold text-ink">Your last imports</p>
+        <p className="break-all text-[12.5px] font-semibold text-ink">{`Your email list: ${file}`}</p>
+        <p className="text-[11.5px] text-ink-soft">{`${IMPORT_DATE.format(new Date(at))} UTC · ${rows.toLocaleString("en-US")} rows`}</p>
+        <div className="rounded-2xl bg-white p-3.5 ring-1 ring-line">
+          <p className="text-[12.5px] font-semibold text-ink">Finished</p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {tiles.map((t) => (
+              <div key={t.label} className={`min-w-0 rounded-xl px-2.5 py-1.5 ${t.tone}`}>
+                <p className={`break-words text-[10.5px] font-semibold ${t.text}`}>{t.label}</p>
+                <p className="text-[13px] font-bold tabular-nums text-ink">{t.n.toLocaleString("en-US")}</p>
+              </div>
+            ))}
+          </div>
+          {counts.errors + counts.skipped > 0 ? (
+            <p className="mt-2.5 flex items-center gap-1.5 text-[12px] font-bold text-violet-deep underline underline-offset-4">
+              <Icon name="download" size={13} />
+              Download the rows that were not brought in
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </Window>
+  );
+}
+
+/**
+ * Part of the dry run of a products file exported from ClickFunnels
+ * (components/import-tool.tsx, DryRunReport): its heading and sentence, a tile
+ * for each outcome that has rows (and always the first), in the tool's words
+ * for products, the rows worth a look with the notes the server writes for
+ * them (lib/imports.ts), and the link to every row; the buttons to check it
+ * again or import it sit under it. The products and counts are an example.
+ */
+export const DRY_RUN_EXAMPLE = {
+  counts: { added: 12, already: 1, skipped: 1, error: 0 } as Partial<Record<Outcome, number>>,
+  rows: [
+    { line: 4, outcome: "already", note: "A product with this title is already in your store: no copy is made", value: "Weeknight dinners" },
+    { line: 9, outcome: "skipped", note: "The same title as row 6", value: "Batch cooking basics" },
+  ] satisfies { line: number; outcome: Outcome; note: string; value: string }[],
+};
+
+function DryRunVisual() {
+  const words = OUTCOME_WORDS.products;
+  const { counts, rows } = DRY_RUN_EXAMPLE;
+  const shown = (Object.keys(words) as Outcome[]).filter((o) => (counts[o] ?? 0) > 0 || o === "added");
+  return (
+    <Window bar="Studio · Move from ClickFunnels">
+      <div className="space-y-2.5 p-5">
+        <p className="text-[13px] font-bold text-ink">Dry run: what this file will do</p>
+        <p className="break-words text-[11.5px] text-ink-soft">Every row was checked the way the import checks it, against your store as it is now. Nothing was saved. The import checks every row again when it runs.</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {shown.map((o) => (
+            <div key={o} className={`min-w-0 rounded-xl px-2.5 py-1.5 ${o === "added" ? "bg-mint-soft" : o === "error" ? "bg-danger-soft" : "bg-paper"}`}>
+              <p className={`break-words text-[10.5px] font-semibold ${o === "added" ? "text-mint-deep" : o === "error" ? "text-danger" : "text-ink-soft"}`}>{words[o]}</p>
+              <p className="text-[13px] font-bold tabular-nums text-ink">{(counts[o] ?? 0).toLocaleString("en-US")}</p>
+            </div>
+          ))}
+        </div>
+        <table className="w-full table-fixed text-left text-[10.5px]">
+          <caption className="text-left text-[11px] font-bold text-ink-soft">Rows worth a look</caption>
+          <thead>
+            <tr className="text-ink-mute">
+              <th className="w-8 px-1 py-1 font-semibold">Row</th>
+              <th className="w-[24%] px-1 py-1 font-semibold">Becomes</th>
+              <th className="px-1 py-1 font-semibold">Why</th>
+              <th className="w-[24%] px-1 py-1 font-semibold">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.line} className="border-t border-line align-top">
+                <td className="px-1 py-1 tabular-nums text-ink-mute">{r.line}</td>
+                <td className="break-words px-1 py-1 text-ink">{words[r.outcome]}</td>
+                <td className="break-words px-1 py-1 text-ink-soft">{r.note}</td>
+                <td className="break-words px-1 py-1 text-ink">{r.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="flex items-center gap-1.5 text-[12px] font-bold text-violet-deep underline underline-offset-4">
+          <Icon name="download" size={13} />
+          Download the dry run, every row
+        </p>
+      </div>
+    </Window>
+  );
+}
+
 const CAPTIONS: Record<VisualKey, string> = {
   store: "A store page, drawn from the demo store you can open and buy from.",
   options: "The buyer is charged the price they picked, as the creator saved it.",
@@ -1297,6 +1416,8 @@ const CAPTIONS: Record<VisualKey, string> = {
   salesPage: "Part of a product's sales page in the studio's editor; the page's score and its test sit at the break. The product and its blocks are made up as an example.",
   crm: `Part of the deals board in the studio, as the store's owner sees it on the ${PLAN_TITLES.creator} plan, on the pipeline a store starts with; its totals and filters sit at the break, and three more stages follow. The deals, the people and the amounts are made up as an example: values recorded on deals, not revenue.`,
   outreach: "Part of one pitch, a draft, from the list at the foot of the studio's Outreach page, for a store without its own domain, with the lines the code adds under every email to a business in the United States and its stop link shortened. The business, the postal address and the words are made up as an example.",
+  importDone: "One of your last imports in the studio: an email list from a spreadsheet, finished, with what came of every row. The file, the day and the counts are made up as an example.",
+  dryRun: "Part of the dry run of a products file from ClickFunnels, before anything is saved; the buttons to import it sit under it. The products and the counts are made up as an example.",
   aiWriting: `The writing help in the sales page editor, on ${AI_PLANS_WORDS}. The product and the jobs left are made up as an example.`,
 };
 
@@ -1338,6 +1459,8 @@ export function FeatureVisual({ visual, tone = "dark" }: { visual: VisualKey; to
     aiWriting: <AiWritingVisual />,
     crm: <CrmVisual />,
     outreach: <OutreachVisual />,
+    importDone: <ImportDoneVisual />,
+    dryRun: <DryRunVisual />,
   }[visual];
   const interactive = visual === "options" || visual === "checkout";
   return (
