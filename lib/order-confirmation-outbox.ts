@@ -213,7 +213,7 @@ export async function reserveCourseConfirmationOrigin(input: {
     const snapshot = snapshotData(value.snapshot) as Record<string, unknown>, store = data(snapshot.store), product = data(snapshot.product), course = data(product?.course);
     const { identity, original } = binding.candidate;
     if (!store || !product || !course || store.sid !== identity.sid || store.statsId !== identity.statsId || store.stripeAccountId !== identity.accountId ||
-        store.handle !== original.handle || store.email !== original.ownerEmail || store.currency !== original.currency || store.language !== original.language ||
+        store.handle !== original.handle || store.name !== original.storeName || store.email !== original.ownerEmail || store.currency !== original.currency || store.language !== original.language ||
         product.id !== identity.productId || course.id !== identity.courseId || product.title !== original.title || product.priceCents !== original.priceCents) return { ok: false };
     const result = await reserveOrigin({ statsId: identity.statsId, nonce: binding.nonce, accountId: identity.accountId,
       body: binding.body, preintent: binding.preintent, snapshot }, runtime, { token: value.bindingToken, fingerprint: hash(value.bindingToken) });
