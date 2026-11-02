@@ -2430,6 +2430,7 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
     highlight: "and your buyers are protected",
     intro:
       "What we do, written so you can check it: payments on your own Stripe account, sign-in without passwords, strict rules on what your pages may run, and a refund that closes what it paid for. And, at the end, what none of it does.",
+    visual: "security",
     badge: WORKING,
     accent: "from-violet-brand to-mint-brand",
     plan: "creator",
