@@ -2,6 +2,7 @@ import { PAGE_TEST_WORDS } from "@/lib/headline-test-words";
 import { funnelBeginnerQuestions } from "@/lib/funnel-faq";
 import { courseBeginnerQuestions } from "@/lib/course-faq";
 import { membershipBeginnerQuestions } from "@/lib/membership-faq";
+import { callBeginnerQuestions } from "@/lib/call-faq";
 import { NEW_CREATOR_PAGES } from "@/lib/creator-situations";
 import { withFeatureMechanisms } from "@/lib/feature-mechanisms";
 import { paidVideoWords, TRIAL_VIDEO_SECONDS } from "@/lib/video-admission-rules";
@@ -499,6 +500,8 @@ const BASE_FEATURE_PAGES: TopicPage[] = [
         kind: "faq",
         title: "Questions about paid calls",
         items: [
+          // 534 [FQ1], unit 4: what someone starting out asks, answered by the code (lib/call-faq.ts).
+          ...callBeginnerQuestions(),
           { q: "What if two people try to book the same time?", a: "The first to reach payment holds it for 30 minutes. The second no longer sees it. If the first does not pay, the time comes back." },
           { q: "Can a call be paid in installments?", a: "No. A call is paid in full when it is booked. Installments are for products with one price." },
           { q: "Can I hold a free session for my members instead?", a: "Yes, as a live event in your community: members RSVP, get reminders and join from the event's page. Paid calls and live sessions are for selling seats; live events are for the people already let into your community." },
