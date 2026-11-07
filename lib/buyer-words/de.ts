@@ -40,7 +40,7 @@ export const de: BuyerWords = {
 
   fairHead: (country, percent) => `Fairer Preis für Ihr Land (${country}): ${percent}${S}% Rabatt`,
   fairNote: (store, plan) =>
-    `${store} senkt die Preise dort, wo Geld weniger wert ist. Der Rabatt wird auf der Zahlungsseite abgezogen, ohne Code${plan ? "; der reduzierte Preis gilt bei Zahlung des vollen Betrags" : ""}.`,
+    `${store} senkt die Preise dort, wo Geld weniger wert ist. Dieser Preis wurde automatisch für Sie festgelegt, anhand des Landes Ihrer Internetverbindung. Der Rabatt wird auf der Zahlungsseite abgezogen, ohne Code${plan ? "; der reduzierte Preis gilt bei Zahlung des vollen Betrags" : ""}.`,
   saleHead: (name, percent, ends) => `${name ? `${name}: ` : ""}${percent}${S}% Rabatt · ${ends}`,
   saleNote: (until, plan) =>
     `Bis ${until}. Der Rabatt wird auf der Zahlungsseite abgezogen, ohne Code${plan ? "; der Aktionspreis gilt bei Zahlung des vollen Betrags" : ""}.`,
@@ -305,6 +305,8 @@ export const de: BuyerWords = {
   askTermsCut: () => "Die vollständigen Bedingungen liegen mir hier nicht vor. Fragen Sie vor dem Kauf beim Ersteller nach.",
 
   noLongerOnSale: "Dieses Produkt ist nicht mehr im Verkauf.",
+  cardUnread: "Dieses Produkt konnte gerade nicht geladen werden. Versuchen Sie es gleich noch einmal.",
+  cardBuyUnread: "Kaufen ist gerade nicht möglich. Versuchen Sie es gleich noch einmal.",
   seeStore: (store) => `${store} ansehen`,
   cardTestMode: "Testmodus: Es wird keine echte Karte belastet.",
   cardCheckout: "Sichere Zahlung über Stripe, in einem neuen Tab.",

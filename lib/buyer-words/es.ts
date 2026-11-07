@@ -43,7 +43,7 @@ export const es: BuyerWords = {
 
   fairHead: (country, percent) => `Precio justo para tu país (${country}): ${percent}\u00a0% de descuento`,
   fairNote: (store, plan) =>
-    `${store} baja sus precios donde el dinero rinde menos. Se descuenta en la página de pago, sin necesidad de código${plan ? "; el precio rebajado es para el pago completo" : ""}.`,
+    `${store} baja sus precios donde el dinero rinde menos. Este precio se calculó automáticamente para ti a partir del país de tu conexión a internet. Se descuenta en la página de pago, sin necesidad de código${plan ? "; el precio rebajado es para el pago completo" : ""}.`,
   saleHead: (name, percent, ends) => `${name ? `${name}: ` : ""}${percent}\u00a0% de descuento · ${ends}`,
   saleNote: (until, plan) =>
     `Hasta el ${until}. Se descuenta en la página de pago, sin necesidad de código${plan ? "; el precio de oferta es para el pago completo" : ""}.`,
@@ -308,6 +308,8 @@ export const es: BuyerWords = {
   askTermsCut: () => "No tengo aquí las condiciones completas. Pregunta al creador antes de comprar.",
 
   noLongerOnSale: "Este producto ya no está a la venta.",
+  cardUnread: "No se ha podido cargar este producto ahora mismo. Vuelve a intentarlo en un momento.",
+  cardBuyUnread: "Ahora mismo no se puede comprar. Vuelve a intentarlo en un momento.",
   seeStore: (store) => `Ver ${store}`,
   cardTestMode: "Modo de prueba: no se cobra ninguna tarjeta real.",
   cardCheckout: "Pago seguro con Stripe, en una pestaña nueva.",

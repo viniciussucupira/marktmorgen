@@ -49,7 +49,7 @@ export const en = {
   // ---- Sales and fair prices ----------------------------------------------
   fairHead: (country: string, percent: number) => `A fair price for ${country}: ${percent}% off`,
   fairNote: (store: string, plan: boolean) =>
-    `${store} lowers prices where money buys less. Taken off on the payment page, no code needed${plan ? "; the lower price is for paying in full" : ""}.`,
+    `${store} lowers prices where money buys less. This price was set automatically for you, from the country of your internet connection. Taken off on the payment page, no code needed${plan ? "; the lower price is for paying in full" : ""}.`,
   saleHead: (name: string, percent: number, ends: string) => `${name ? `${name}: ` : ""}${percent}% off · ${ends}`,
   saleNote: (until: string, plan: boolean) =>
     `Until ${until}. Taken off on the payment page, no code needed${plan ? "; the sale price is for paying in full" : ""}.`,
@@ -333,6 +333,10 @@ export const en = {
 
   // ---- The card on the creator's own website ---------------------------------------------
   noLongerOnSale: "This product is no longer on sale.",
+  /** A product that could not be read just now (CX-123 rule 24): never said to be off sale. */
+  cardUnread: "This product could not be loaded just now. Try again in a moment.",
+  /** Whether it can be bought could not be read just now, so no buy button is drawn. */
+  cardBuyUnread: "Buying is not available just now. Try again in a moment.",
   seeStore: (store: string) => `See ${store}`,
   cardTestMode: "Test mode: no real card is charged.",
   cardCheckout: "Secure checkout by Stripe, in a new tab.",
