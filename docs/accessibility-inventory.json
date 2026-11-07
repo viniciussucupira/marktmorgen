@@ -1003,6 +1003,12 @@
       "parameters": []
     },
     {
+      "source": "app/studio/companies/page.tsx",
+      "status": "AAA review not completed",
+      "routeTemplate": "/studio/companies",
+      "parameters": []
+    },
+    {
       "source": "app/studio/copy/page.tsx",
       "status": "AAA review not completed",
       "routeTemplate": "/studio/copy",
@@ -1311,6 +1317,7 @@
     "components/community-push-toggle.tsx",
     "components/community-room.tsx",
     "components/community-studio.tsx",
+    "components/companies-editor.tsx",
     "components/company-owner-report.tsx",
     "components/confirm-action.tsx",
     "components/contact-box-editor.tsx",
@@ -1469,6 +1476,7 @@
     "components/pdf-preview-toggle.tsx",
     "components/pdf-stamp-toggle.tsx",
     "components/pending-submit.tsx",
+    "components/person-company.tsx",
     "components/person-erase.tsx",
     "components/person-fields.tsx",
     "components/person-find.tsx",
@@ -1742,6 +1750,7 @@
     "app/api/store/community/route.ts",
     "app/api/store/community/rsvp/route.ts",
     "app/api/store/community/upload/route.ts",
+    "app/api/store/companies/route.ts",
     "app/api/store/contact-box/route.ts",
     "app/api/store/contact-labels/route.ts",
     "app/api/store/contact/route.ts",
@@ -2032,6 +2041,6 @@
   "routeInventory": {
     "generator": "scripts/accessibility-route-inventory.mjs",
     "scope": "Source templates and parameter shapes only. Existing review status is preserved; a route is not an exercised fixture or a passing accessibility test.",
-    "pageTemplates": 139
+    "pageTemplates": 140
   }
 }
