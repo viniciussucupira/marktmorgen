@@ -89,6 +89,17 @@
       ]
     },
     {
+      "source": "app/[handle]/community/about/page.tsx",
+      "status": "AAA review not completed",
+      "routeTemplate": "/[handle]/community/about",
+      "parameters": [
+        {
+          "name": "handle",
+          "kind": "segment"
+        }
+      ]
+    },
+    {
       "source": "app/[handle]/community/chat/page.tsx",
       "status": "AAA review not completed",
       "routeTemplate": "/[handle]/community/chat",
