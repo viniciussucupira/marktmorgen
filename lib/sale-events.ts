@@ -15,7 +15,8 @@
  * connected nothing costs nothing extra on either path.
  *
  * What goes where:
- *   - the phone gets the amount and what was bought, for every paid order
+ *   - the phone gets the amount (only when Stripe's answer gives it exactly:
+ *     otherwise the sale is told without one) and what was bought, for every paid order
  *     except a booked call, which is told as a booking when it is confirmed
  *     (lib/calls.ts); a one-click offer taken after paying is a sale of its own
  *     (noteOfferSale);
@@ -29,8 +30,8 @@
  *     what was bought, when and the billing country (lib/recent-sales.ts).
  */
 import { saleHandles } from "@/lib/store";
-import { isRedisConfigured, redisPipeline } from "@/lib/redis";
-import { claimMark } from "@/lib/claim-mark";
+import { isRedisConfigured } from "@/lib/redis";
+import { claimMark, claimValue, releaseMark } from "@/lib/claim-mark";
 import { isSettled } from "@/lib/instant-pay";
 import { alertCreator } from "@/lib/phone-alerts";
 import { queuePerson } from "@/lib/email-sync";
@@ -67,9 +68,16 @@ export function listensToSales(store: Store): boolean {
   return Boolean(store.stripeAccountId) && (store.phoneSales || store.emailSync !== null || store.chatSales || store.recentSales);
 }
 
-/** An amount as the checkout charged it: in its own currency, the store's when Stripe did not say. */
-function money(amount: number, currency: unknown, store: Store): string {
-  return formatMoney(amount, typeof currency === "string" && currency ? currency : store.currency);
+/**
+ * The amount as Stripe charged it, read exactly: whole cents from zero up, in
+ * the currency Stripe names for it. Anything else is unknown (null), never $0
+ * nor a figure guessed in the store's currency (rule 24): the notice then says
+ * a sale happened, without a figure.
+ */
+function charged(amount: unknown, currency: unknown): string | null {
+  // Stripe names a currency by three lowercase letters (ISO 4217); anything else is not one (Claude 6 on #3058).
+  if (typeof currency !== "string" || !/^[a-z]{3}$/.test(currency)) return null;
+  return typeof amount === "number" && Number.isSafeInteger(amount) && amount >= 0 ? formatMoney(amount, currency) : null;
 }
 
 /**
@@ -97,7 +105,7 @@ async function tell(store: Store, record: SaleRecord, session: string): Promise<
     inside.length ? readListings(store, inside) : Promise.resolve([] as Listing[]),
   ]);
   const title = product?.title ?? meta.title ?? "A product";
-  const amount = typeof record.amount_total === "number" ? record.amount_total : 0;
+  const amount = charged(record.amount_total, record.currency);
   const at = typeof record.created === "number" ? record.created * 1000 : Date.now();
 
   // The store's own pages, where the creator shows its latest purchases (lib/recent-sales.ts).
@@ -108,7 +116,7 @@ async function tell(store: Store, record: SaleRecord, session: string): Promise<
       store,
       "sale",
       {
-        title: `${meta.kind === "tip" ? "New support" : "New sale"}: ${money(amount, record.currency, store)}`,
+        title: `${meta.kind === "tip" ? "New support" : "New sale"}${amount === null ? "" : `: ${amount}`}`,
         body: [title, ...bumps.map((added) => added.title)].join(" + "),
         url: studioAt(store, "#numbers"),
       },
@@ -124,7 +132,7 @@ async function tell(store: Store, record: SaleRecord, session: string): Promise<
     if (url) {
       const what = meta.kind === "call" ? "New booking" : meta.kind === "tip" ? "New support" : "New sale";
       const channel = meta.utm_source || (meta.channel && meta.channel !== "direct" ? meta.channel : "");
-      const line = `${what} on ${store.name}: ${money(amount, record.currency, store)}, ${[title, ...bumps.map((added) => added.title)].join(" + ")}${channel ? ` (from ${channelName(channel)})` : ""}`;
+      const line = `${what} on ${store.name}: ${amount === null ? "" : `${amount}, `}${[title, ...bumps.map((added) => added.title)].join(" + ")}${channel ? ` (from ${channelName(channel)})` : ""}`;
       await postToChat(url, line).catch(() => false);
     }
   }
@@ -157,13 +165,19 @@ export async function noteSales(store: Store, records: SaleRecord[]): Promise<nu
     (r): r is SaleRecord & { id: string } => typeof r.id === "string" && isSettled(r) && handles.has(r.metadata?.store ?? ""),
   );
   if (!paid.length) return 0;
-  // One round trip for which of them were told already.
-  const marks = await redisPipeline(paid.map((r) => ["EXISTS", toldKey(r.id)]));
+  // Each told once: its mark claimed exactly first (lib/claim-mark.ts), so the thanks page and the five-minute job
+  // never both tell it, and an answer in no known shape tells nothing this run (Claude 6 on #3058). A telling that
+  // throws lets its own mark go, so a later run tells it.
   let told = 0;
-  for (let i = 0; i < paid.length; i += 1) {
-    if (Number(marks[i]) === 1) continue;
-    await tell(store, paid[i], paid[i].id);
-    await redisPipeline([["SET", toldKey(paid[i].id), "1", "EX", TOLD_SECONDS]]);
+  for (const record of paid) {
+    const value = claimValue();
+    if ((await claimMark(toldKey(record.id), TOLD_SECONDS, value)) !== "ours") continue;
+    try {
+      await tell(store, record, record.id);
+    } catch (error) {
+      await releaseMark(toldKey(record.id), value);
+      throw error;
+    }
     told += 1;
   }
   return told;
@@ -179,19 +193,19 @@ export async function noteOfferSale(store: Store, product: Listing, payment: Rec
   if (!store.phoneSales && !store.chatSales) return;
   const id = typeof payment.id === "string" ? payment.id : "";
   if (!id) return;
-  const amount = typeof payment.amount === "number" ? payment.amount : 0;
+  const amount = charged(payment.amount, payment.currency);
   if (store.chatSales && isRedisConfigured()) {
     // Once, like the phone's: the payment's own mark.
     // Ours only on an exact claim (lib/claim-mark.ts): an unknown answer posts nothing.
     const fresh = await claimMark(toldKey(id), TOLD_SECONDS);
     const url = fresh === "ours" ? await chatAddress(store.statsId).catch(() => null) : null;
-    if (url) await postToChat(url, `New sale on ${store.name}: ${money(amount, payment.currency, store)}, ${product.title} (one-click offer)`).catch(() => false);
+    if (url) await postToChat(url, `New sale on ${store.name}: ${amount === null ? "" : `${amount}, `}${product.title} (one-click offer)`).catch(() => false);
   }
   if (!store.phoneSales) return;
   await alertCreator(
     store,
     "sale",
-    { title: `New sale: ${money(amount, payment.currency, store)}`, body: `${product.title} (one-click offer)`, url: studioAt(store, "#numbers") },
+    { title: `New sale${amount === null ? "" : `: ${amount}`}`, body: `${product.title} (one-click offer)`, url: studioAt(store, "#numbers") },
     { seed: id, at: typeof payment.created === "number" ? payment.created * 1000 : Date.now() },
   );
 }
