@@ -40,7 +40,8 @@ import { monthKey, storeKeysOf } from "@/lib/delivery";
 import { randomInt } from "node:crypto";
 import { isRedisConfigured, redisPipeline } from "@/lib/redis";
 import { releaseLock } from "@/lib/redis-lock";
-import { repliesFor } from "@/lib/redis-reply";
+import { UnknownReplyError, repliesFor } from "@/lib/redis-reply";
+import { textCountOf } from "@/lib/redis-count";
 import { type Store, storeFolder, storeForEmail, storeRef } from "@/lib/store";
 import { SMALLEST_LINE_CENTS, canBeCharged, monthBefore } from "@/lib/watch-rules";
 
@@ -81,25 +82,46 @@ const SETTLE_DAYS = 5;
  */
 type Adding = { from: number; to: number; at: number; amount: number; line: string; customerId: string; subscriptionId: string };
 
+/**
+ * The line being added, read exactly (CX-123 rule 24): nil is none; a record
+ * of a line is the line. Any other answer, or a record that cannot be read,
+ * throws: it may be a line that reached the invoice, and is never "none",
+ * which would begin the month's line again from what was billed before it.
+ */
 function parseAdding(raw: unknown): Adding | null {
-  if (typeof raw !== "string") return null;
+  if (raw === null) return null;
+  const unknown = () => new UnknownReplyError("a usage line being added");
+  if (typeof raw !== "string") throw unknown();
+  let value: Partial<Adding> & { seconds?: unknown };
   try {
-    const value = JSON.parse(raw) as Partial<Adding> & { seconds?: unknown };
-    if (typeof value.from !== "number" || typeof value.to !== "number" || !(value.to > value.from) || value.from < 0) return null;
-    if (typeof value.customerId !== "string" || typeof value.subscriptionId !== "string" || typeof value.at !== "number") return null;
-    const used = typeof value.amount === "number" ? value.amount : typeof value.seconds === "number" ? value.seconds : 0;
-    return {
-      from: value.from,
-      to: value.to,
-      at: value.at,
-      amount: used > 0 ? used : 0,
-      line: typeof value.line === "string" ? value.line : "",
-      customerId: value.customerId,
-      subscriptionId: value.subscriptionId,
-    };
+    value = JSON.parse(raw) as Partial<Adding> & { seconds?: unknown };
   } catch {
-    return null;
+    throw unknown();
   }
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw unknown();
+  // Whole cents and a whole time only (Claude 5 on #2944): a fraction or a figure past any number is not a line this
+  // code wrote, and read as one it would be taken for carried out, or past what is owed, and the month begun again.
+  const whole = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n);
+  if (!whole(value.from) || !whole(value.to) || !(value.to > value.from) || value.from < 0) throw unknown();
+  if (typeof value.customerId !== "string" || typeof value.subscriptionId !== "string" || !whole(value.at)) throw unknown();
+  // Optional in records written before they were kept: what was used, and the line's words.
+  const used = typeof value.amount === "number" ? value.amount : typeof value.seconds === "number" ? value.seconds : 0;
+  return {
+    from: value.from,
+    to: value.to,
+    at: value.at,
+    amount: used > 0 ? used : 0,
+    line: typeof value.line === "string" ? value.line : "",
+    customerId: value.customerId,
+    subscriptionId: value.subscriptionId,
+  };
+}
+
+/** What a month was already billed, read exactly: nil is nothing yet, a whole number of cents is the figure; anything else throws. */
+function readBilled(raw: unknown): number {
+  const count = textCountOf(raw);
+  if (count === null) throw new UnknownReplyError("a usage month's billed figure");
+  return count === "absent" ? 0 : count;
 }
 
 export type Settled = {
@@ -227,12 +249,15 @@ export async function settleUsage(meter: Meter, folder: string, month: string, f
   const out: Settled = { folder, month, amount, owed, added: 0, state: "nothing", store };
   if (!isRedisConfigured()) return out;
 
-  const [billedRaw, addingRaw] = await redisPipeline([
+  // Read exactly (CX-123 rule 24): an unknown answer settles nothing and adds nothing to an invoice; it throws, and the
+  // daily run (settleAllUsage) logs it and tries the store again on the next run.
+  const replies = repliesFor(await redisPipeline([
     ["GET", billedKey(meter, folder, month)],
     ["GET", addingKey(meter, folder, month)],
-  ]);
-  let billed = Number(billedRaw) > 0 ? Math.floor(Number(billedRaw)) : 0;
-  let unfinished = parseAdding(addingRaw);
+  ]), 2);
+  if (!replies) throw new UnknownReplyError("a usage month's billed figure and line");
+  let billed = readBilled(replies[0]);
+  let unfinished = parseAdding(replies[1]);
   if (unfinished && unfinished.from !== billed) {
     // Written down for a figure that has since moved on: it was carried out.
     await redisPipeline([["DEL", addingKey(meter, folder, month)]]);
@@ -283,7 +308,11 @@ export async function settleUsage(meter: Meter, folder: string, month: string, f
     customerId: store.stripeCustomerId,
     subscriptionId: store.subscriptionId,
   };
-  await redisPipeline([["SET", addingKey(meter, folder, month), JSON.stringify(adding), "EX", KEEP_SECONDS]]);
+  // The line written down is what stops a second charge if this run ends before the figure is: Stripe is asked only
+  // once it is known to be there, an exact "OK" (CX-123 rule 24; Claude 5 on #2944). Any other answer throws and
+  // nothing is charged; a write that landed with its answer lost is finished by the next run, as any unfinished line.
+  const wrote = repliesFor(await redisPipeline([["SET", addingKey(meter, folder, month), JSON.stringify(adding), "EX", KEEP_SECONDS]]), 1);
+  if (!wrote || wrote[0] !== "OK") throw new UnknownReplyError("a usage line written down before its charge");
   if (!(await carryOut(meter, folder, month, adding))) return { ...out, state: "failed" };
   await redisPipeline([
     ["SET", billedKey(meter, folder, month), owed, "EX", KEEP_SECONDS],
