@@ -1,8 +1,8 @@
 # 426 [BX2] Earnings by month and by source: design (6 November 2026)
 
-State: design, plus the pure rule (`lib/earnings-by-month.ts`, `tests/bx2-earnings.test.ts`).
-No page, route, reading, storage or CSV is built by this unit; nothing is available to a
-customer. Queue text: docs/codex-queue.md, item 426 [BX2].
+State: design, the pure rule (`lib/earnings-by-month.ts`, `tests/bx2-earnings.test.ts`) and,
+in unit 2, the year reading (`lib/earnings-read.ts`, `tests/bx2-u2-year-read.test.ts`). No page,
+route, entered amounts or CSV is built yet; nothing is available to a customer. Queue text: docs/codex-queue.md, item 426 [BX2].
 
 ## What the creator sees (the screen, built in a later unit)
 
@@ -209,6 +209,33 @@ source and currency only).
    reading kind through `keptReading`, heavy, counted first. Tests: the read never exceeds
    `SALES_READ_SHAPE` (stub counting pages and commands), unknown read is unknown, registry line
    updated for the fourth kind.
+
+   **Built** (#3022): `readEarningsYear(store, timeZone, now)` in lib/earnings-read.ts
+   (lib/stats.ts is another agent's file), following the plan above. It reads four Stripe lists
+   with the sales reading's paths and page caps (`EARNINGS_STRIPE_PAGES`: 20 + 20 + 10 + 5 = 55,
+   within `SALES_READ_SHAPE`'s 58) and the PayPal sales (2,000) and refunds (`PAYPAL_REFUNDS_READ`),
+   in their exact shape, list by list: lib/stats.ts's readers answer one `partial` for two lists
+   together, read PayPal refunds oldest first and take an unreadable answer as an empty list, so
+   they cannot say how far back each list was read. Stripe's disputes are said not read with the
+   money given back (`notRead: ["dispute", "reinstated"]`): their balance transactions' shape is
+   not confirmed in this repository, so the disputes list is not read and no page is spent on it;
+   PayPal says its disputes. Every paid invoice of the store's memberships but
+   `subscription_create` counts (a one-off invoice of no subscription is not a membership's). Every
+   record carries `stripe:…` or `paypal:…`. Each list returns `reachedBack`; a row or record that
+   cannot be read stops its list there (the newer months stay known), but the paid invoices, dated
+   by payment, know no month when they stop, at a row or at their cap (`reachedBack` null, so
+   every Stripe month is unknown); a page in another shape, an id twice, rows out of order or a
+   failure make the list unread. Renewals are dated by `status_transitions.paid_at`; until Stripe's
+   retry window is proved from dated documentation they are known only from
+   `RENEWAL_PAID_WITHIN_DAYS` (27) after the reading's start, which gives up the oldest month, and
+   a renewal read that was paid later than that after its invoice makes the renewals unread. The
+   reading's time is taken once every list was read. Kept as the fourth reading kind
+   (`READING_KINDS` 3 to 4, `HEAVY_KINDS` in lib/store-readings.ts), taken as one of the day's two
+   heavy readings before anything is read. Cost, measured: the store-readings line +US$ 0.0000011
+   a month (one more copy kept a day) and the store-data registry, which prices each store's
+   capped copies for the whole month, the rest: `worstCost("creator")` 6.6569297 to 6.6569654
+   (+US$ 0.0000357); the refunded first year on Creator 64.96876 to 64.96880, under 65 and 66.
+   Reading three fewer pages lowers no priced line (the line prices `SALES_READ_SHAPE`).
 3. **Entered by you**: lib/earnings-entries.ts, a capped per-store ledger with audited
    corrections (date, currency, amount, label, who and when), a studio request per save,
    lib/redis-reply.ts on every reply; the storage line in the registry; privacy and terms text
